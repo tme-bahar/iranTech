@@ -83,7 +83,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                   )
               ),
-              Center(child: SvgPicture.asset('assets/logo.svg',width: 250,))
+              Center(child: SvgPicture.asset('assets/logo.svg',width: 250,)),
+              Align(alignment: Alignment.topRight,
+                child: Container(margin: const EdgeInsets.only(top: 60.0,right: 20),child:
+                  const Text("خوش آمدید",style: TextStyle(color: Colors.white,fontSize: 30),),),),
             ],
       ),
       ),
