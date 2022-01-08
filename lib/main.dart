@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -37,10 +37,8 @@ class _MyHomePageState extends State<MyHomePage> {
     const Color orange = Color.fromARGB(255, 255, 74, 28);
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color blue = Color.fromARGB(255,96, 172, 247);
+    final Widget svgLogo = SvgPicture.asset('asset_name.svg');
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
       body: Container(
           alignment: Alignment.center,
           decoration: const BoxDecoration(
@@ -49,7 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           child: Stack(
             children: [
-              Positioned(top: 230,right: -120,
+              Positioned(top: 400,right: -120,
                     child:
                   Transform.rotate(angle: -3.14 / 4, child:
                       SizedBox(width: 330,height: 320,child:
@@ -67,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       )
                   )
                 ),
-              Positioned(top: 170,left: -120,
+              Positioned(top: 225,left: -120,
                   child:
                   Transform.rotate(angle: -3.14 / 4, child:
                     SizedBox(width: 320,height: 320,child:
@@ -84,7 +82,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       )
                     )
                   )
-              )
+              ),
+              Center(child: SvgPicture.asset('assets/logo.svg',width: 250,))
             ],
       ),
       ),
