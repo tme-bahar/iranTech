@@ -100,8 +100,8 @@ class Login extends StatelessWidget {
             Button(text:'ورود' ,margin: 100,color: blue,textColor: Colors.black,onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(builder: (context) => const Home()));},),
             //password text filed
-            EditText(hint: 'رمز عبور', margin: 320),
-            EditText(hint: 'پست الکترونیکی', margin: 400),
+            AlignEditText(hint: 'رمز عبور', margin: 320),
+            AlignEditText(hint: 'پست الکترونیکی', margin: 400),
             Align(alignment: Alignment.bottomCenter,child:
               Container(
                   margin: const EdgeInsets.only(bottom: 290),child:
@@ -136,10 +136,10 @@ class SignUp extends StatelessWidget {
             child: Stack(children: [
               Button(text: 'ثبت نام',margin: 100,textColor: Colors.white,color: orange,onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => Home()));},),
-              EditText(margin : 480,hint : 'نام'),
-              EditText(margin : 320,hint : 'شماره تلفن همراه'),
-              EditText(margin : 400,hint :  'پست الکترونیکی'),
-              EditText(hint: 'رمز عبور', margin: 240)
+              AlignEditText(margin : 480,hint : 'نام'),
+              AlignEditText(margin : 320,hint : 'شماره تلفن همراه'),
+              AlignEditText(margin : 400,hint :  'پست الکترونیکی'),
+              AlignEditText(hint: 'رمز عبور', margin: 240)
             ])
         )
     );
@@ -277,8 +277,10 @@ class AddCentralDevice extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color orange = Color.fromARGB(255, 255, 74, 28);
-    return Scaffold(appBar: AppBar(backgroundColor: back,title:const Align(alignment: Alignment.centerRight,child: Text('افزودن دستگاه'),))
-        ,resizeToAvoidBottomInset: false,
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: const Align(
+          alignment: Alignment.centerRight, child: Text('اضافه کنید'),))
+        , resizeToAvoidBottomInset: false,
         body: Container(
             alignment: Alignment.center,
             decoration: const BoxDecoration(
@@ -286,79 +288,81 @@ class AddCentralDevice extends StatelessWidget {
                     transform: GradientRotation(1.57))
             ),
             child: Stack(children: [
-              MaterialApp(
-                home: DefaultTabController(
-                  length: 3,
-                  child: Scaffold(backgroundColor: const Color.fromARGB(0, 0, 0, 0) ,
-                    bottomNavigationBar: menu(),
-                    body: TabBarView(
-                      children: [
-                        Container(child: Center(child: Text('موردی برای نمایش وجود ندارد',style: TextStyle(color: Colors.white),),)),
-                        Container(child: Icon(Icons.directions_transit)),
-                        Container(child: Icon(Icons.directions_bike)),
-                      ],
-                    ),
-                  ),
-                ),
-              )
+              Align(alignment: Alignment.topRight,child: SpecialText('توکن دستگاه خود را وارد کنید'),),
+              Center(child: EditText(hint: 'توکن دستگاه',),),
+              IcButton(text: 'QR code',margin: 50, icon: const Icon(Icons.qr_code_outlined,color: Colors.white,),
+                color:orange ,textColor: Colors.white,onPressed: ()=>{Navigator.of(context).push(MaterialPageRoute(builder: (context) => Activate1()))},)
             ])
         )
     );
   }
-  Widget menu() {
-    const Color orange = Color.fromARGB(255, 255, 74, 28);
-    return Container(
-      color: Color.fromARGB(255,77 ,87, 109),
-      child: const TabBar(
-        labelColor: orange,
-        unselectedLabelColor: Colors.white70,
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: EdgeInsets.all(5.0),
-        indicatorColor: orange,
-        tabs: [
-          Tab(
-            text: "خانه",
-            icon: Icon(Icons.home),
-          ),
-          Tab(
-            text: "علاقه مندی",
-            icon: Icon(Icons.star_border),
-          ),
-          Tab(
-            text: "جست و جو",
-            icon: Icon(Icons.search),
-          ),
-        ],
-      ),
-    );}
 }
 
-class EditText extends Align{
-  EditText({Key? key,required String hint,required double margin}) :
+class Activate1 extends StatelessWidget {
+  const Activate1({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: const Align(
+          alignment: Alignment.centerRight, child: Text('راه اندازی'),))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child: Stack(children: [
+              Align(alignment: Alignment.topRight,child: SpecialText('لطفا اطلاعات مربوط به دستگاه مرکزی خود را وارد کنید'),),
+              Center(child: Column(mainAxisAlignment: MainAxisAlignment.center,children : [
+                EditText(hint: 'نام دستگاه',),
+                const SizedBox(height: 20,),
+                EditText(hint: 'مکان مورد استفاده',),
+                const SizedBox(height: 20,),
+                EditText(hint: 'رمز عبور',),
+              ] ),),
+              Row(mainAxisAlignment: MainAxisAlignment.center,children: [
+                Button(width: 180,margin: 20,onPressed: ()=>{},textColor: Colors.white,color: blue,text: 'مرحله بعد',),
+              ],)
+            ])
+        )
+    );
+  }
+}
+
+class AlignEditText extends Align{
+  AlignEditText({Key? key,required String hint,required double margin}) :
         super(key: key,alignment: Alignment.bottomCenter,
           child:Container(
-              margin: EdgeInsets.only(bottom: margin),
-              child:SizedBox(width: 350,child:
-                TextField(decoration:
-                  InputDecoration(
-                      enabledBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText: hint,
-                      hintTextDirection: TextDirection.rtl,
-                      hintStyle: const TextStyle(color: Colors.white)
-                  ),
-                )
-              )
+              margin:  EdgeInsets.only(bottom: margin),
+              child:EditText(hint:hint)
           ),
         );
 }
 
+class EditText extends SizedBox{
+   EditText({Key? key,String? hint}) : super(key: key,width: 350,child:
+     TextField(decoration:
+       InputDecoration(
+           enabledBorder: const OutlineInputBorder(
+             borderSide: BorderSide(color: Colors.grey, width: 2.0),
+           ),
+           hintText: hint,
+           hintTextDirection: TextDirection.rtl,
+           hintStyle: const TextStyle(color: Colors.white)
+       ),
+     )
+   );
+}
+
 class Button extends Align{
-   Button({Key? key,required double margin,String? text,Color? textColor,Color? color,VoidCallback? onPressed}) : super(key: key,alignment:Alignment.bottomCenter,
+   Button({Key? key,double? width,required double margin,String? text,Color? textColor,Color? color,VoidCallback? onPressed}) : super(key: key,alignment:Alignment.bottomCenter,
       child:Container(
           margin: EdgeInsets.only(bottom: margin),child:
-        SizedBox(width: 240,height: 50,child:
+        SizedBox(width: width ?? 240,height: 50,child:
           ElevatedButton(onPressed: onPressed,
             child: Text(text!,style: TextStyle(fontSize: 18,color: textColor)),
             style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(color!),
@@ -372,6 +376,31 @@ class Button extends Align{
         )
       ),
    );
+}
+
+class IcButton extends Align{
+  IcButton({Key? key,required double margin,required Icon icon,String? text,Color? textColor,Color? color,VoidCallback? onPressed}) : super(key: key,alignment:Alignment.bottomCenter,
+    child:Container(
+        margin: EdgeInsets.only(bottom: margin),child:
+        SizedBox(width: 240,height: 50,child:
+          ElevatedButton(onPressed: onPressed,
+            child:Align(alignment: Alignment.center,child: Row(mainAxisAlignment: MainAxisAlignment.center,
+              textDirection: TextDirection.rtl,
+              children: [
+              Text(text!,style: TextStyle(fontSize: 18,color: textColor)),
+              icon,
+            ],),),
+            style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(color!),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+              ),
+            ),
+          )
+        )
+    ),
+  );
 }
 
 class BackCube extends SizedBox{
@@ -388,4 +417,9 @@ class BackCube extends SizedBox{
             ]),
       ) );
 
+}
+
+class SpecialText extends Text{
+  SpecialText(String data, {Key? key,TextStyle? textStyle,double? fountSize}) : super(data,key: key,
+    style: textStyle != null? textStyle :  TextStyle(fontSize: fountSize !=null ? fountSize : 35,color: Colors.white));
 }
