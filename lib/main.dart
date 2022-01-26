@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -325,9 +326,52 @@ class Activate1 extends StatelessWidget {
                 EditText(hint: 'رمز عبور',),
               ] ),),
               Row(mainAxisAlignment: MainAxisAlignment.center,children: [
-                Button(width: 180,margin: 20,onPressed: ()=>{},textColor: Colors.white,color: blue,text: 'مرحله بعد',),
+                Button(width: 250,margin: 40,onPressed: ()=>{Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddDevice()))
+                  },textColor: Colors.white,color: blue,text: 'مرحله بعد',),
               ],)
             ])
+        )
+    );
+  }
+}
+
+class AddDevice extends StatelessWidget {
+  const AddDevice({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: const Align(
+          alignment: Alignment.centerRight, child: Text('اضافه کنید'),))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child:
+              Column(children: [
+                Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
+                EditText(hint: 'جست و جو بین محصولات',),
+                const SizedBox(height: 20,),
+                Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                  Column(children: [
+                    DeviceType(iconDir: 'Icon_microwave.png', text: 'مایکرو ویو'),
+                    const SizedBox(height: 20,),
+                    DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز'),
+                  ],),
+                    const SizedBox(width: 20,),
+                  Column(children: [
+                    DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی'),
+                    const SizedBox(height: 20,),
+                    DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز'),
+                  ],)
+                ],)
+              ],)
         )
     );
   }
@@ -421,5 +465,24 @@ class BackCube extends SizedBox{
 
 class SpecialText extends Text{
   SpecialText(String data, {Key? key,TextStyle? textStyle,double? fountSize}) : super(data,key: key,
-    style: textStyle != null? textStyle :  TextStyle(fontSize: fountSize !=null ? fountSize : 35,color: Colors.white));
+    style: textStyle != null? textStyle :  TextStyle(fontSize: fountSize !=null ? fountSize : 20,color: Colors.white),
+      textDirection: TextDirection.rtl);
+}
+
+class DeviceType extends SizedBox{
+  DeviceType({Key? key,required String iconDir,required String text}) : super(key: key,width: 150,height: 150,child:
+    Container(
+      decoration:  const BoxDecoration(
+          color:  Color.fromARGB(255,77, 87, 109),
+          borderRadius: BorderRadius.all(Radius.circular(10))
+      ),
+      child: Center(child:
+        Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+          SizedBox(width: 60 ,child: Image.asset('assets/$iconDir')),
+          const SizedBox(height: 8,),
+          SpecialText(text,fountSize : 18)
+        ],),),
+    )
+  );
+
 }
