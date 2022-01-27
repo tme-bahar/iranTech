@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -352,28 +351,116 @@ class AddDevice extends StatelessWidget {
                 gradient: LinearGradient(colors: [back, Colors.black],
                     transform: GradientRotation(1.57))
             ),
-            child:
+            child:SingleChildScrollView(child:
               Column(children: [
                 Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
                 EditText(hint: 'جست و جو بین محصولات',),
                 const SizedBox(height: 20,),
-                Row(mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                  Column(children: [
-                    DeviceType(iconDir: 'Icon_microwave.png', text: 'مایکرو ویو'),
-                    const SizedBox(height: 20,),
-                    DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز'),
+                  Row(mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                    Column(children: [
+                      DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز',K: 'power',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_refrigerator.png', text: 'یخچال',K: 'refrigerator',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_washing machine.png', text: 'لباس شویی',K: 'washing machine',con: context),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_router.png', text: 'شبکه و وسایل هوشمند',K: 'router',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی',K: 'electricity',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_television.png', text: 'صوتی تصویری',K: 'television',con: context,),
+                    ],),
+                      const SizedBox(width: 20,),
+                    Column(children: [
+                      DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز',K: 'coffee maker',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_dishwater.png', text: 'ظرف شویی',K: 'dishwater',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_water.png', text: 'شیر آلات',K: 'water',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_stove.png', text: 'فر و گرمایش',K: 'stove',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_mirror closet.png', text: 'سایر',K: 'other',con: context,),
+                      const SizedBox(height: 20,),
+                      DeviceType(iconDir: 'Icon_closet.png', text: 'دستگاه سفارشی',K: 'special',con: context,),
+                    ],)
                   ],),
-                    const SizedBox(width: 20,),
-                  Column(children: [
-                    DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی'),
-                    const SizedBox(height: 20,),
-                    DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز'),
-                  ],)
-                ],)
+                const SizedBox(height: 20,),
               ],)
+            )
         )
     );
+  }
+}
+
+class ListPage extends StatelessWidget {
+  String K1;
+  String? K2;
+  String? K3;
+  Map<String,Map<String,Map<String,String>>> table;
+  Iterable<String>? data;
+  ListPage({Key? key,required this.table,required String this.K1,String? K2,String? K3}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    dataManaging();
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: const Align(
+          alignment: Alignment.centerRight, child: Text('اضافه کنید'),))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child:SingleChildScrollView(child:
+            Column(children: [
+              Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
+              EditText(hint: 'جست و جو بین محصولات',),
+              const SizedBox(height: 20,),
+              Column(children: [
+                Column(children: list(context)??[])
+                /*DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی',K: 'electricity',),
+                const SizedBox(height: 20,),
+                DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز',K: 'coffee maker',),
+                const SizedBox(height: 20,),
+                DeviceType(iconDir: 'Icon_dishwater.png', text: 'ظرف شویی',K: 'dishwater',),
+                const SizedBox(height: 20,),
+                DeviceType(iconDir: 'Icon_water.png', text: 'شیر آلات',K: 'water',),
+                const SizedBox(height: 20,),
+                DeviceType(iconDir: 'Icon_stove.png', text: 'فر و گرمایش',K: 'stove',),
+                const SizedBox(height: 20,),
+                DeviceType(iconDir: 'Icon_mirror closet.png', text: 'سایر',K: 'other',),
+                const SizedBox(height: 20,),
+                DeviceType(iconDir: 'Icon_closet.png', text: 'دستگاه سفارشی',K: 'special',),*/
+              ],),
+            ],)
+            )
+        )
+    );
+  }
+  void dataManaging(){
+    if(K3 == null) {
+      data = table[K1]?.keys ;
+    } else {
+      data = table[K1]![K2]?.keys ;
+    }
+  }
+  List<Widget>? list(BuildContext context) {
+    int j =  data?.length ?? 0;
+    List<Widget>? result = [];
+    for(int i = 0; i < j;i++){
+      ListElement lm;
+      lm = (K3 == null) ?
+        ListElement(context: context,table: table,K1: K1,K2:data?.elementAt(i)??"") :
+        ListElement(context: context,table: table,K1: K1,K2:K2??"",K3:data?.elementAt(i)??"");
+      result.add(lm);
+      result.add(const SizedBox(height: 15,),);
+    }
+    return result;
   }
 }
 
@@ -465,24 +552,71 @@ class BackCube extends SizedBox{
 
 class SpecialText extends Text{
   SpecialText(String data, {Key? key,TextStyle? textStyle,double? fountSize}) : super(data,key: key,
-    style: textStyle != null? textStyle :  TextStyle(fontSize: fountSize !=null ? fountSize : 20,color: Colors.white),
+    style: textStyle ?? TextStyle(fontSize: fountSize !=null ? fountSize : 20,color: Colors.white),
       textDirection: TextDirection.rtl);
 }
 
 class DeviceType extends SizedBox{
-  DeviceType({Key? key,required String iconDir,required String text}) : super(key: key,width: 150,height: 150,child:
-    Container(
-      decoration:  const BoxDecoration(
-          color:  Color.fromARGB(255,77, 87, 109),
-          borderRadius: BorderRadius.all(Radius.circular(10))
-      ),
+  final String K ;
+
+  DeviceType({Key? key,required BuildContext con,required String text,required String iconDir, required this.K}) :
+        super(key: key,width: 170,height: 110,child:
+    ElevatedButton(style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+            )
+        )),
+      onPressed: () {
+        Map<String,Map<String,Map<String,String>>> table = {
+          'power':{
+            'pow':{'ug-265':'id'},
+            'pow1':{'ug-265':'id'},
+            'pow2':{'ug-265':'id'},
+            'pow3':{'ug-265':'id'},
+            'pow4':{'ug-265':'id'},
+            'pow5':{'ug-265':'id'},
+            'pow6':{'ug-265':'id'},
+            'pow7':{'ug-265':'id'},
+            'pow8':{'ug-265':'id'},
+            'pow9':{'ug-265':'id'},
+            'pow10':{'ug-265':'id'},
+          }
+        };
+      Navigator.of(con).push(MaterialPageRoute(builder: (context) => ListPage(K1: K,table: table,) ));},
       child: Center(child:
         Column(mainAxisAlignment: MainAxisAlignment.center,children: [
-          SizedBox(width: 60 ,child: Image.asset('assets/$iconDir')),
-          const SizedBox(height: 8,),
-          SpecialText(text,fountSize : 18)
+          SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
+          const SizedBox(height: 5,),
+          SpecialText(text,fountSize : 15)
         ],),),
     )
   );
 
+}
+
+class ListElement extends SizedBox{
+  String K1;
+  String K2;
+  String? K3;
+  Map<String,Map<String,Map<String,String>>> table;
+  ListElement({Key? key,required BuildContext context,required this.table
+    ,required this.K1,required this.K2,this.K3})
+      : super(key: key,width: 350,height: 60,child:
+    ElevatedButton(style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            )
+        )),
+      onPressed: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+        K3 ==null ?ListPage(K1: K1,K2: K2,table: table,) : ListPage(K1: K1,K2:K2,K3:K3,table: table,) ));},
+      child: Align(alignment: Alignment.centerRight,child:
+        SpecialText(K3 ?? K2,fountSize : 15)
+      ,),
+    )
+  );
 }
