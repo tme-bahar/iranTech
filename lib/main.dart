@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-
+import 'dart:developer';
 void main() {
   runApp(const MyApp());
 }
@@ -181,13 +181,25 @@ class Home extends StatelessWidget {
                               )
                           ),
                           body: Container(
-                              child:const Center(child: Text('موردی برای نمایش وجود ندارد',
-                              style: TextStyle(color: Colors.white),),),
                               alignment: Alignment.center,
                               decoration: const BoxDecoration(
                                   gradient: LinearGradient(colors: [back, Colors.black],
                                       transform: GradientRotation(1.57))
-                              ),),
+                              ),
+                              child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+
+                                  Column(children: [
+                                    const SizedBox(height: 30,),
+                                    Device(iconDir: 'Icon_coffee maker.png', name: 'قهوه ساز',con: context,ID: '0',),
+                                  ],),
+                                  const SizedBox(width: 20,),
+                                  Column(children: [
+                                    const SizedBox(height: 30,),
+                                    Device(iconDir: 'Icon_television.png', name: 'صوتی تصویری',con: context,ID: '1',),
+                                  ],)
+                                ],),
+                          ),
                         ),
                         Scaffold(appBar:
                           AppBar(
@@ -395,12 +407,11 @@ class AddDevice extends StatelessWidget {
 }
 
 class ListPage extends StatelessWidget {
-  String K1;
-  String? K2;
-  String? K3;
+  final String K1;
+  final String? K2;
   Map<String,Map<String,Map<String,String>>> table;
   Iterable<String>? data;
-  ListPage({Key? key,required this.table,required String this.K1,String? K2,String? K3}) : super(key: key);
+  ListPage({Key? key,required this.table,required String this.K1,this.K2}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     dataManaging();
@@ -417,33 +428,18 @@ class ListPage extends StatelessWidget {
                     transform: GradientRotation(1.57))
             ),
             child:SingleChildScrollView(child:
-            Column(children: [
-              Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
-              EditText(hint: 'جست و جو بین محصولات',),
-              const SizedBox(height: 20,),
               Column(children: [
-                Column(children: list(context)??[])
-                /*DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی',K: 'electricity',),
+                Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
+                EditText(hint: 'جست و جو بین محصولات',),
                 const SizedBox(height: 20,),
-                DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز',K: 'coffee maker',),
-                const SizedBox(height: 20,),
-                DeviceType(iconDir: 'Icon_dishwater.png', text: 'ظرف شویی',K: 'dishwater',),
-                const SizedBox(height: 20,),
-                DeviceType(iconDir: 'Icon_water.png', text: 'شیر آلات',K: 'water',),
-                const SizedBox(height: 20,),
-                DeviceType(iconDir: 'Icon_stove.png', text: 'فر و گرمایش',K: 'stove',),
-                const SizedBox(height: 20,),
-                DeviceType(iconDir: 'Icon_mirror closet.png', text: 'سایر',K: 'other',),
-                const SizedBox(height: 20,),
-                DeviceType(iconDir: 'Icon_closet.png', text: 'دستگاه سفارشی',K: 'special',),*/
-              ],),
-            ],)
+                  Column(children: list(context)??[]),
+              ],)
             )
         )
     );
   }
   void dataManaging(){
-    if(K3 == null) {
+    if(K2 == null) {
       data = table[K1]?.keys ;
     } else {
       data = table[K1]![K2]?.keys ;
@@ -454,7 +450,7 @@ class ListPage extends StatelessWidget {
     List<Widget>? result = [];
     for(int i = 0; i < j;i++){
       ListElement lm;
-      lm = (K3 == null) ?
+      lm = (K2 == null) ?
         ListElement(context: context,table: table,K1: K1,K2:data?.elementAt(i)??"") :
         ListElement(context: context,table: table,K1: K1,K2:K2??"",K3:data?.elementAt(i)??"");
       result.add(lm);
@@ -463,6 +459,81 @@ class ListPage extends StatelessWidget {
     return result;
   }
 }
+
+class ControlPage extends StatelessWidget {
+  final String ID;
+  final String name;
+  ControlPage({Key? key,required this.ID,required this.name}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: Align(
+          alignment: Alignment.centerRight, child: Text(name),))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child:Column(mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(width: 85,
+                        child: ElevatedButton(onPressed: ()=>{},
+                          child: Icon(Icons.power_settings_new),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(orange),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(10))
+                                  )
+                              )),
+                        ),
+                      ),
+                      SizedBox(width: 40,),
+                      SizedBox(width: 85,
+                        child: ElevatedButton(onPressed: ()=>{},
+                          child: Icon(Icons.star_border),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      side: BorderSide(color: Color.fromARGB(255, 96, 172, 247)),
+                                      borderRadius: BorderRadius.all(Radius.circular(10))
+                                  )
+                              )),
+                        ),
+                      ),
+                      SizedBox(width: 40,),
+                      SizedBox(width: 85,
+                          child: ElevatedButton(onPressed: ()=>{},
+                            child: Icon(Icons.mic_rounded),
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    const RoundedRectangleBorder(
+                                        side: BorderSide(color: Color.fromARGB(255, 96, 172, 247)),
+                                        borderRadius: BorderRadius.all(Radius.circular(10))
+                                    )
+                                )),
+                          ),
+                      )
+                    ]),
+                Row(mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+
+                    ]),
+              ],),
+        )
+    );
+  }
+}
+
+
 
 class AlignEditText extends Align{
   AlignEditText({Key? key,required String hint,required double margin}) :
@@ -613,10 +684,38 @@ class ListElement extends SizedBox{
         )),
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-        K3 ==null ?ListPage(K1: K1,K2: K2,table: table,) : ListPage(K1: K1,K2:K2,K3:K3,table: table,) ));},
+            K3 == null ?
+            ListPage(K1: K1,K2:K2,table: table,):
+            Home()));},
       child: Align(alignment: Alignment.centerRight,child:
         SpecialText(K3 ?? K2,fountSize : 15)
       ,),
     )
   );
+}
+
+class Device extends SizedBox{
+  final String ID ;
+  final String name;
+  final String iconDir;
+  Device( {Key? key,required BuildContext con,required this.iconDir,required this.ID,required this.name,}) :
+        super(key: key,width: 170,height: 110,child:
+      ElevatedButton(style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              )
+          )),
+        onPressed: () {
+          Navigator.of(con).push(MaterialPageRoute(builder: (context) => ControlPage(ID: ID, name: name) ));
+          },
+        child: Center(child:
+        Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+          SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
+          const SizedBox(height: 5,),
+          SpecialText(name,fountSize : 15)
+        ],),),
+      )
+      );
 }
