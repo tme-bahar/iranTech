@@ -1,4 +1,5 @@
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 void main() {
@@ -461,6 +462,7 @@ class ListPage extends StatelessWidget {
 }
 
 class ControlPage extends StatelessWidget {
+  bool vol = false;
   final String ID;
   final String name;
   ControlPage({Key? key,required this.ID,required this.name}) : super(key: key);
@@ -469,6 +471,7 @@ class ControlPage extends StatelessWidget {
     const Color blue = Color.fromARGB(255,96, 172, 247);
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color orange = Color.fromARGB(255, 255, 74, 28);
+    const Color button = Color.fromARGB(255,77, 87, 109);
     return Scaffold(appBar: AppBar(backgroundColor: back,
         title: Align(
           alignment: Alignment.centerRight, child: Text(name),))
@@ -494,38 +497,203 @@ class ControlPage extends StatelessWidget {
                               )),
                         ),
                       ),
-                      SizedBox(width: 40,),
+                      const SizedBox(width: 50,),
                       SizedBox(width: 85,
                         child: ElevatedButton(onPressed: ()=>{},
-                          child: Icon(Icons.star_border),
+                          child: const Icon(Icons.star_border),
                           style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
+                              backgroundColor: MaterialStateProperty.all(button),
                               shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                   const RoundedRectangleBorder(
-                                      side: BorderSide(color: Color.fromARGB(255, 96, 172, 247)),
+                                      side: BorderSide(color: blue),
                                       borderRadius: BorderRadius.all(Radius.circular(10))
                                   )
                               )),
                         ),
                       ),
-                      SizedBox(width: 40,),
+                      const SizedBox(width: 50,),
                       SizedBox(width: 85,
                           child: ElevatedButton(onPressed: ()=>{},
-                            child: Icon(Icons.mic_rounded),
+                            child: const Icon(Icons.mic_rounded),
                             style: ButtonStyle(
-                                backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
+                                backgroundColor: MaterialStateProperty.all(button),
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                                     const RoundedRectangleBorder(
-                                        side: BorderSide(color: Color.fromARGB(255, 96, 172, 247)),
+                                        side: BorderSide(color: blue),
                                         borderRadius: BorderRadius.all(Radius.circular(10))
                                     )
                                 )),
                           ),
                       )
                     ]),
+                const SizedBox(height: 50,),
                 Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+                        SizedBox(width: 55,height: 174,child:
+                          Container(child:
+                            Stack(children: [
+                              Align(alignment: Alignment.topCenter,child:
+                                SizedBox(width: 55,height: 87,child:
+                                  ElevatedButton(onPressed: ()=>{},
+                                      child:const Center(child: Icon(Icons.keyboard_arrow_up,color: Colors.white,)),
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all(button),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              const RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.only(
+                                                      topLeft: Radius.circular(20),
+                                                      topRight: Radius.circular(20),
+                                                      bottomLeft: Radius.circular(0),
+                                                      bottomRight: Radius.circular(0),
+                                                  )
+                                              )
+                                          )),
+                                  ),
+                                ),
+                              ),
+                              Align(alignment: Alignment.bottomCenter,child:
+                                SizedBox(width: 55,height: 87,child:
+                                    ElevatedButton(onPressed: ()=>{},
+                                      child: const Center(child: Icon(Icons.keyboard_arrow_down,color: Colors.white,),),
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all(button),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              const RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.only(
+                                                    topLeft: Radius.circular(0),
+                                                    topRight: Radius.circular(0),
+                                                    bottomLeft: Radius.circular(20),
+                                                    bottomRight: Radius.circular(20),
+                                                  )
+                                              )
+                                          )),
+                                    ),
+                                  )
+                              ),
+                              Center(child: SpecialText('CH',fountSize: 15,),)
+                            ],),
+                            decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                border: Border.all(color:blue),
+                                color: button,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20,),
+                        SizedBox(height: 55,width: 55,child:
+                          ElevatedButton(onPressed: ()=>{},
+                            child: const Icon(Icons.volume_off),
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(button),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    const RoundedRectangleBorder(
+                                        side: BorderSide(color: blue),
+                                        borderRadius: BorderRadius.all(Radius.circular(20))
+                                    )
+                                )),
+                          ),
+                        )
+                      ],),
+                      const SizedBox(width: 10,),
+                      Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+                        SizedBox(width: 240,height: 240,child:
+                          Container(
+                            decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(150)),
+                              color: button,),
+                            child: Stack(children: [
+                                Center(child:
+                                  SizedBox(width: 100,height: 100,child:
+                                    ElevatedButton(onPressed: ()=>{},
+                                      child: SpecialText('OK'),
+                                      style: ButtonStyle(
+                                          backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,50, 55, 65)),
+                                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              const RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.all(Radius.circular(150),
+                                                  )
+                                              )
+                                          )
+                                      )
+                                    ),
+                                  )
+                                ),
+                                ButtonOnControl(margin: EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {  },),
+                                ButtonOnControl(margin: EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {  },),
+                                ButtonOnControl(margin: EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {  },),
+                                ButtonOnControl(margin: EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {  },)
+                              ]
+                            ),
+                          ),
+                        ),
+                      ],),
+                      const SizedBox(width: 10,),
 
+                      Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+                        SizedBox(width: 55,height: 174,child:
+                          Container(child:
+                            Stack(children: [
+                              Align(alignment: Alignment.topCenter,child:
+                                SizedBox(width: 55,height: 87,child:
+                                  ElevatedButton(onPressed: ()=>{},
+                                    child:const Center(child: Icon(Icons.volume_up,color: Colors.white,)),
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(20),
+                                                  topRight: Radius.circular(20),
+                                                  bottomLeft: Radius.circular(0),
+                                                  bottomRight: Radius.circular(0),
+                                                )
+                                            )
+                                        )),
+                                  ),
+                                ),
+                              ),
+                              Align(alignment: Alignment.bottomCenter,child:
+                                SizedBox(width: 55,height: 87,child:
+                                  ElevatedButton(onPressed: ()=>{},
+                                    child: const Center(child: Icon(Icons.volume_down,color: Colors.white,),),
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(0),
+                                                  topRight: Radius.circular(0),
+                                                  bottomLeft: Radius.circular(20),
+                                                  bottomRight: Radius.circular(20),
+                                                )
+                                            )
+                                        )),
+                                  ),
+                                )
+                              ),
+                              Center(child: SpecialText('Vol',fountSize: 15,),)
+                            ],),
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                              color: Color.fromARGB(255,77, 87, 109),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20,),
+                        SizedBox(height: 55,width: 55,child:
+                          ElevatedButton(onPressed: ()=>{},
+                            child: const Icon(Icons.question_answer_outlined),
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    const RoundedRectangleBorder(
+                                        side: BorderSide(color: Color.fromARGB(255, 96, 172, 247)),
+                                        borderRadius: BorderRadius.all(Radius.circular(20))
+                                    )
+                                )),
+                          ),
+                        )
+                      ],)
                     ]),
               ],),
         )
@@ -718,4 +886,52 @@ class Device extends SizedBox{
         ],),),
       )
       );
+}
+
+class TrianglePainter extends CustomPainter {
+  final Color strokeColor;
+  final PaintingStyle paintingStyle;
+  final double strokeWidth;
+
+  TrianglePainter({this.strokeColor = Colors.black, this.strokeWidth = 3, this.paintingStyle = PaintingStyle.stroke});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = strokeColor
+      ..strokeWidth = strokeWidth
+      ..style = paintingStyle;
+
+    canvas.drawPath(getTrianglePath(size.width, size.height), paint);
+  }
+
+  Path getTrianglePath(double x, double y) {
+    return Path()
+      ..moveTo(0, y)
+      ..lineTo(x / 2, 0)
+      ..lineTo(x, y)
+      ..lineTo(0, y);
+  }
+
+  @override
+  bool shouldRepaint(TrianglePainter oldDelegate) {
+    return oldDelegate.strokeColor != strokeColor ||
+        oldDelegate.paintingStyle != paintingStyle ||
+        oldDelegate.strokeWidth != strokeWidth;
+  }
+}
+
+class ButtonOnControl extends Align{
+  ButtonOnControl({Key? key,required EdgeInsetsGeometry margin,required IconData icon,required VoidCallback onPressed,required AlignmentGeometry alignment})
+      : super(key: key,alignment: alignment, child:
+  Container(margin: margin,
+      child:
+      SizedBox(width: 50,height: 50,
+          child: RawMaterialButton(
+            onPressed: onPressed,
+            child:Icon(icon,size: 40,color: Colors.white,),
+          )
+      )
+  ),
+  );
 }
