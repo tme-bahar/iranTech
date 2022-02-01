@@ -1,7 +1,10 @@
 
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
+import 'package:http/http.dart' as http;
 void main() {
   runApp(const MyApp());
 }
@@ -64,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Center(child: SizedBox(width: 260,child: Image.asset('assets/logo.png'),)),
               //login button
               Button(color: blue,margin: 100,textColor: Colors.black,text: 'ورود',onPressed:() {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => Login()));
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginState()));
                 } ,
               ),
               //sign up button
@@ -79,10 +82,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+class LoginState extends StatefulWidget {
+  @override
+  State<LoginState> createState() => Login();
+}
 
-class Login extends StatelessWidget {
-  const Login({Key? key}) : super(key: key);
-
+class Login extends State<LoginState> {
+  Login({Key? key}) : super();
+  String username = "";
+  String password = "";
+  TextEditingController usernameController = new TextEditingController();
+  TextEditingController passwordController = new TextEditingController();
   @override
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
@@ -99,10 +109,14 @@ class Login extends StatelessWidget {
           child: Stack(children: [
             //login button
             Button(text:'ورود' ,margin: 100,color: blue,textColor: Colors.black,onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const Home()));},),
+              //Navigator.of(context).push(MaterialPageRoute(builder: (context) => const Home()));
+              username = usernameController.text;
+              password = passwordController.text;
+              login();
+              },),
             //password text filed
-            AlignEditText(hint: 'رمز عبور', margin: 320),
-            AlignEditText(hint: 'پست الکترونیکی', margin: 400),
+            AlignEditText(hint: 'رمز عبور', margin: 320,controler: passwordController,),
+            AlignEditText(hint: 'نام کاربری', margin: 400,controler: usernameController,),
             Align(alignment: Alignment.bottomCenter,child:
               Container(
                   margin: const EdgeInsets.only(bottom: 290),child:
@@ -115,6 +129,22 @@ class Login extends StatelessWidget {
           ])
       )
     );
+  }
+
+  void login() async {
+    String url = 'https://bsite.net/irantech/ParlarProject/login.aspx?field=$username&password=$password';
+    final response = await http
+        .get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      log(response.body);
+      List<UserDevice> list =  UserDevice.allFromJson(jsonDecode(response.body));
+      if(list.elementAt(0).exception.toString().isEmpty)
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  Home(list: list)));
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
   }
 }
 
@@ -136,7 +166,8 @@ class SignUp extends StatelessWidget {
             ),
             child: Stack(children: [
               Button(text: 'ثبت نام',margin: 100,textColor: Colors.white,color: orange,onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => Home()));},),
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+                    Home(list : List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));},),
               AlignEditText(margin : 480,hint : 'نام'),
               AlignEditText(margin : 320,hint : 'شماره تلفن همراه'),
               AlignEditText(margin : 400,hint :  'پست الکترونیکی'),
@@ -148,9 +179,10 @@ class SignUp extends StatelessWidget {
 }
 
 class Home extends StatelessWidget {
-  const Home({Key? key}) : super(key: key);
+  List<UserDevice> list ;
+  Home({Key? key,required this.list}) : super(key: key);
  void startAdd(){
-   (context) => const Login();
+   (context) =>  Login();
 
    print("search button clicked");
  }
@@ -682,7 +714,7 @@ class ControlPage extends StatelessWidget {
                         const SizedBox(height: 20,),
                         SizedBox(height: 55,width: 55,child:
                           ElevatedButton(onPressed: ()=>{},
-                            child: const Icon(Icons.question_answer_outlined),
+                            child: const Icon(Icons.exit_to_app),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -704,17 +736,18 @@ class ControlPage extends StatelessWidget {
 
 
 class AlignEditText extends Align{
-  AlignEditText({Key? key,required String hint,required double margin}) :
+  AlignEditText({Key? key,required String hint,required double margin,TextEditingController? controler}) :
         super(key: key,alignment: Alignment.bottomCenter,
           child:Container(
               margin:  EdgeInsets.only(bottom: margin),
-              child:EditText(hint:hint)
+              child:EditText(hint:hint,controler: controler,),
+
           ),
         );
 }
 
 class EditText extends SizedBox{
-   EditText({Key? key,String? hint}) : super(key: key,width: 350,child:
+   EditText({Key? key,String? hint, TextEditingController? controler}) : super(key: key,width: 350,child:
      TextField(decoration:
        InputDecoration(
            enabledBorder: const OutlineInputBorder(
@@ -724,6 +757,7 @@ class EditText extends SizedBox{
            hintTextDirection: TextDirection.rtl,
            hintStyle: const TextStyle(color: Colors.white)
        ),
+       controller: controler,
      )
    );
 }
@@ -854,7 +888,7 @@ class ListElement extends SizedBox{
         Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
             K3 == null ?
             ListPage(K1: K1,K2:K2,table: table,):
-            Home()));},
+            Home(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));},
       child: Align(alignment: Alignment.centerRight,child:
         SpecialText(K3 ?? K2,fountSize : 15)
       ,),
@@ -888,39 +922,6 @@ class Device extends SizedBox{
       );
 }
 
-class TrianglePainter extends CustomPainter {
-  final Color strokeColor;
-  final PaintingStyle paintingStyle;
-  final double strokeWidth;
-
-  TrianglePainter({this.strokeColor = Colors.black, this.strokeWidth = 3, this.paintingStyle = PaintingStyle.stroke});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = strokeColor
-      ..strokeWidth = strokeWidth
-      ..style = paintingStyle;
-
-    canvas.drawPath(getTrianglePath(size.width, size.height), paint);
-  }
-
-  Path getTrianglePath(double x, double y) {
-    return Path()
-      ..moveTo(0, y)
-      ..lineTo(x / 2, 0)
-      ..lineTo(x, y)
-      ..lineTo(0, y);
-  }
-
-  @override
-  bool shouldRepaint(TrianglePainter oldDelegate) {
-    return oldDelegate.strokeColor != strokeColor ||
-        oldDelegate.paintingStyle != paintingStyle ||
-        oldDelegate.strokeWidth != strokeWidth;
-  }
-}
-
 class ButtonOnControl extends Align{
   ButtonOnControl({Key? key,required EdgeInsetsGeometry margin,required IconData icon,required VoidCallback onPressed,required AlignmentGeometry alignment})
       : super(key: key,alignment: alignment, child:
@@ -934,4 +935,44 @@ class ButtonOnControl extends Align{
       )
   ),
   );
+}
+
+
+class UserDevice {
+  final String device_name;
+  final String id;
+  final String device_type;
+  final String device_id;
+  final String user_id;
+  final String status;
+  final String token;
+  final String exception;
+
+  const UserDevice({
+    required this.device_name,
+    required this.id,
+    required this.device_type,
+    required this.device_id,
+    required this.exception,
+    required this.status,
+    required this.token,
+    required this.user_id
+  });
+
+  static List<UserDevice> allFromJson(List<dynamic> json) {
+    return List<UserDevice>.generate(json.length,(i)=>UserDevice.fromJson(json.elementAt(i)));
+  }
+
+  factory UserDevice.fromJson(Map<String, dynamic> json) {
+    return UserDevice(
+        device_name: json['device_name'],
+        id: json['id'],
+        device_type: json['device_type'],
+        device_id: json['device_id'],
+        exception: json['exception'],
+        status: json['status'],
+        token: json['token'],
+        user_id: json['user_id']
+    );
+  }
 }
