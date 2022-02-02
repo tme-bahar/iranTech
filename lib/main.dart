@@ -25,6 +25,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
 
@@ -34,13 +35,15 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin{
+  late AnimationController rotationController = AnimationController(duration: const Duration(milliseconds: 5000), vsync: this);
   @override
   Widget build(BuildContext context) {
+
     const Color orange = Color.fromARGB(255, 255, 74, 28);
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color blue = Color.fromARGB(255,96, 172, 247);
+    rotationController.repeat();
     return Scaffold(
       appBar: AppBar(titleTextStyle: const TextStyle(color: Colors.white,fontSize: 25,)
       ,backgroundColor: back,title: Align(alignment: Alignment.centerRight,child: Text('خوش آمدید'),)),
@@ -52,7 +55,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           child: Stack(
             children: [
-              //orange cube
+              RotationTransition(
+              turns: Tween(begin: 0.0, end: 1.0).animate(rotationController),
+              child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)),
               Positioned(top: 350,right: -120,
                     child:
                   Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)
@@ -99,7 +104,7 @@ class Login extends State<LoginState> {
     const Color blue = Color.fromARGB(255,96, 172, 247);
     return Scaffold(resizeToAvoidBottomInset: false,
       appBar: AppBar(titleTextStyle: const TextStyle(color: Colors.white,fontSize: 25,)
-          ,backgroundColor: back,title: Align(alignment: Alignment.centerRight,child: Text('ورود'),)),
+          ,backgroundColor: back,title:const Align(alignment: Alignment.centerRight,child: Text('ورود'),)),
       body: Container(
         alignment: Alignment.center,
         decoration: const BoxDecoration(
@@ -113,6 +118,7 @@ class Login extends State<LoginState> {
               username = usernameController.text;
               password = passwordController.text;
               login();
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  Waiting()));
               },),
             //password text filed
             AlignEditText(hint: 'رمز عبور', margin: 320,controler: passwordController,),
@@ -183,8 +189,6 @@ class Home extends StatelessWidget {
   Home({Key? key,required this.list}) : super(key: key);
  void startAdd(){
    (context) =>  Login();
-
-   print("search button clicked");
  }
   @override
   Widget build(BuildContext context) {
@@ -733,6 +737,36 @@ class ControlPage extends StatelessWidget {
   }
 }
 
+class Waiting extends StatelessWidget {
+  const Waiting({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(
+        body: Container(
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child:Stack(children: [
+              Positioned(top: 350,right: -120,
+                  child:
+                  Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)
+                  ),
+              ),
+              Positioned(top: 175,left: -120,
+                  child:
+                  Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: blue,back: back,offset: const Offset(15,15),))
+              ),
+            ],)
+        )
+    );
+  }
+}
+
 
 
 class AlignEditText extends Align{
@@ -740,25 +774,30 @@ class AlignEditText extends Align{
         super(key: key,alignment: Alignment.bottomCenter,
           child:Container(
               margin:  EdgeInsets.only(bottom: margin),
-              child:EditText(hint:hint,controler: controler,),
-
+              child:EditText(hint:hint,controler: controler,)
           ),
         );
 }
 
 class EditText extends SizedBox{
    EditText({Key? key,String? hint, TextEditingController? controler}) : super(key: key,width: 350,child:
-     TextField(decoration:
-       InputDecoration(
-           enabledBorder: const OutlineInputBorder(
-             borderSide: BorderSide(color: Colors.grey, width: 2.0),
+     Container(
+       child:Padding(child:
+         TextField(decoration:
+           InputDecoration(
+             hintText: hint,
+             hintTextDirection: TextDirection.rtl,
+             hintStyle: const TextStyle(color: Colors.white),
+             focusColor: Colors.white,
+             hoverColor: Colors.white,
            ),
-           hintText: hint,
-           hintTextDirection: TextDirection.rtl,
-           hintStyle: const TextStyle(color: Colors.white)
-       ),
-       controller: controler,
-     )
+             controller: controler,
+             style:const TextStyle(color: Colors.white),
+            cursorColor: Colors.white,
+           )
+         , padding: const EdgeInsets.all(5),),
+       decoration: BoxDecoration(border: Border.all(color: Colors.white,width: 2)),
+     ),
    );
 }
 
