@@ -55,14 +55,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
           child: Stack(
             children: [
-              RotationTransition(
-              turns: Tween(begin: 0.0, end: 1.0).animate(rotationController),
-              child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)),
               Positioned(top: 350,right: -120,
-                    child:
+                  child:
                   Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)
                   )
-                ),
+              ),
               //blue cube
               Positioned(top: 175,left: -120,
                   child:
@@ -118,7 +115,7 @@ class Login extends State<LoginState> {
               username = usernameController.text;
               password = passwordController.text;
               login();
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  Waiting()));
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  WaitingState()));
               },),
             //password text filed
             AlignEditText(hint: 'رمز عبور', margin: 320,controler: passwordController,),
@@ -194,7 +191,20 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color orange = Color.fromARGB(255, 255, 74, 28);
-    return Scaffold(
+    return Scaffold(appBar:
+        AppBar(
+            actions:  const [
+              Align(alignment: Alignment.centerRight,
+                  child: Padding(padding: EdgeInsets.only(right: 20),
+                    child: Text('خانه',style: TextStyle(fontSize: 25),),)),],
+            automaticallyImplyLeading: false,
+            backgroundColor: back,
+            title:
+            Row(children: [
+              IconButton(icon:const Icon(Icons.help), onPressed: () {  },),
+              IconButton(icon:const Icon(Icons.add), onPressed : (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));})],
+            )
+        ),
         resizeToAvoidBottomInset: false,
         body: MaterialApp(
                 home: DefaultTabController(
@@ -203,20 +213,7 @@ class Home extends StatelessWidget {
                     bottomNavigationBar: menu(),
                     body: TabBarView(
                       children: [
-                        Scaffold(appBar:
-                          AppBar(
-                              actions:  const [
-                                Align(alignment: Alignment.centerRight,
-                                  child: Padding(padding: EdgeInsets.only(right: 20),
-                                    child: Text('خانه',style: TextStyle(fontSize: 25),),)),],
-                              automaticallyImplyLeading: false,
-                              backgroundColor: back,
-                              title:
-                                Row(children: [
-                                  IconButton(icon:const Icon(Icons.menu), onPressed: () {  },),
-                                  IconButton(icon:const Icon(Icons.add), onPressed : (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));})],
-                              )
-                          ),
+                        Scaffold(
                           body: Container(
                               alignment: Alignment.center,
                               decoration: const BoxDecoration(
@@ -238,20 +235,7 @@ class Home extends StatelessWidget {
                                 ],),
                           ),
                         ),
-                        Scaffold(appBar:
-                          AppBar(
-                              actions:  const [
-                                Align(alignment: Alignment.centerRight,
-                                    child: Padding(padding: EdgeInsets.only(right: 20),
-                                      child: Text('خانه',style: TextStyle(fontSize: 25),),)),],
-                              automaticallyImplyLeading: false,
-                              backgroundColor: back,
-                              title:
-                              Row(children: [
-                                IconButton(icon:const Icon(Icons.menu), onPressed: () {  },),
-                                IconButton(icon:const Icon(Icons.add), onPressed : (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));})],
-                              )
-                          ),
+                        Scaffold(
                           body: Container(
                             child:const Center(child: Text('موردی برای نمایش وجود ندارد',
                               style: TextStyle(color: Colors.white),),),
@@ -261,20 +245,7 @@ class Home extends StatelessWidget {
                                     transform: GradientRotation(1.57))
                             ),),
                         ),
-                        Scaffold(appBar:
-                          AppBar(
-                              actions:  const [
-                                Align(alignment: Alignment.centerRight,
-                                    child: Padding(padding: EdgeInsets.only(right: 20),
-                                      child: Text('خانه',style: TextStyle(fontSize: 25),),)),],
-                              automaticallyImplyLeading: false,
-                              backgroundColor: back,
-                              title:
-                              Row(children: [
-                                IconButton(icon:const Icon(Icons.menu), onPressed: () {  },),
-                                IconButton(icon:const Icon(Icons.add), onPressed : (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));})],
-                              )
-                          ),
+                        Scaffold(
                           body: Container(
                             child:const Center(child: Text('موردی برای نمایش وجود ندارد',
                               style: TextStyle(color: Colors.white),),),
@@ -737,14 +708,20 @@ class ControlPage extends StatelessWidget {
   }
 }
 
-class Waiting extends StatelessWidget {
-  const Waiting({Key? key}) : super(key: key);
+class WaitingState extends StatefulWidget {
+  @override
+  State<WaitingState> createState() => Waiting();
+}
 
+class Waiting extends State<WaitingState> with SingleTickerProviderStateMixin {
+  Waiting({Key? key}) : super();
+  late AnimationController rotationController = AnimationController(duration: const Duration(milliseconds: 5000), vsync: this);
   @override
   Widget build(BuildContext context) {
     const Color blue = Color.fromARGB(255,96, 172, 247);
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color orange = Color.fromARGB(255, 255, 74, 28);
+    rotationController.repeat();
     return Scaffold(
         body: Container(
             decoration: const BoxDecoration(
@@ -753,14 +730,19 @@ class Waiting extends StatelessWidget {
             ),
             child:Stack(children: [
               Positioned(top: 350,right: -120,
-                  child:
-                  Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)
+                  child:RotationTransition(
+                    turns: Tween(begin: 0.0, end: 1.0).animate(rotationController),
+                    child: Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: orange,back: back,offset: const Offset(-15,-15),)
                   ),
+                ),
               ),
               Positioned(top: 175,left: -120,
-                  child:
-                  Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: blue,back: back,offset: const Offset(15,15),))
+                      child:RotationTransition(
+                          turns: Tween(begin: 0.0, end: 1.0).animate(rotationController),
+                          child: Transform.rotate(angle: -3.14 / 4, child:BackCube(shadow: blue,back: back,offset: const Offset(15,15),))
+                  ),
               ),
+              Center(child: SpecialText('لطفا صبر کنید ...'),)
             ],)
         )
     );
