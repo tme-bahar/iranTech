@@ -214,7 +214,7 @@ class Home extends StatelessWidget {
                     body: TabBarView(
                       children: [
                         Scaffold(
-                          body: Container(
+                          body: /*Container(
                               alignment: Alignment.center,
                               decoration: const BoxDecoration(
                                   gradient: LinearGradient(colors: [back, Colors.black],
@@ -222,7 +222,6 @@ class Home extends StatelessWidget {
                               ),
                               child: Row(mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-
                                   Column(children: [
                                     const SizedBox(height: 30,),
                                     Device(iconDir: 'Icon_coffee maker.png', name: 'قهوه ساز',con: context,ID: '0',),
@@ -233,7 +232,60 @@ class Home extends StatelessWidget {
                                     Device(iconDir: 'Icon_television.png', name: 'صوتی تصویری',con: context,ID: '1',),
                                   ],)
                                 ],),
-                          ),
+                          ),*/
+                          MaterialApp(
+                            home: DefaultTabController(
+                              length: 3,
+                              child: Scaffold(backgroundColor: const Color.fromARGB(0, 0, 0, 0) ,
+                                bottomNavigationBar: rooms(),
+                                body: TabBarView(
+                                  children: [
+                                    Scaffold(
+                                      body: Container(
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                            gradient: LinearGradient(colors: [back, Colors.black],
+                                                transform: GradientRotation(1.57))
+                                        ),
+                                        child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Column(children: [
+                                              const SizedBox(height: 30,),
+                                              Device(iconDir: 'Icon_coffee maker.png', name: 'قهوه ساز',con: context,ID: '0',),
+                                            ],),
+                                            const SizedBox(width: 20,),
+                                            Column(children: [
+                                              const SizedBox(height: 30,),
+                                              Device(iconDir: 'Icon_television.png', name: 'صوتی تصویری',con: context,ID: '1',),
+                                            ],)
+                                          ],),
+                                      ),
+                                    ),
+                                    Scaffold(
+                                      body: Container(
+                                        child:const Center(child: Text('موردی برای نمایش وجود ندارد',
+                                          style: TextStyle(color: Colors.white),),),
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                            gradient: LinearGradient(colors: [back, Colors.black],
+                                                transform: GradientRotation(1.57))
+                                        ),),
+                                    ),
+                                    Scaffold(
+                                      body: Container(
+                                        child:const Center(child: Text('موردی برای نمایش وجود ندارد',
+                                          style: TextStyle(color: Colors.white),),),
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                            gradient: LinearGradient(colors: [back, Colors.black],
+                                                transform: GradientRotation(1.57))
+                                        ),),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
                         ),
                         Scaffold(
                           body: Container(
@@ -266,6 +318,33 @@ class Home extends StatelessWidget {
     const Color orange = Color.fromARGB(255, 255, 74, 28);
     return Container(
       color: Color.fromARGB(255,77 ,87, 109),
+      child: const TabBar(
+        labelColor: orange,
+        unselectedLabelColor: Colors.white70,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorPadding: EdgeInsets.all(5.0),
+        indicatorColor: orange,
+        tabs: [
+          Tab(
+            text: "خانه",
+            icon: Icon(Icons.home),
+          ),
+          Tab(
+            text: "علاقه مندی",
+            icon: Icon(Icons.star_border),
+          ),
+          Tab(
+            text: "جست و جو",
+            icon: Icon(Icons.search),
+          ),
+        ],
+      ),
+    );}
+  Widget rooms() {
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    return Container(
+      color: back,
       child: const TabBar(
         labelColor: orange,
         unselectedLabelColor: Colors.white70,
