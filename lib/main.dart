@@ -3,8 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:http/retry.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -16,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Iran tech',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -122,10 +124,11 @@ class Login extends State<LoginState> {
             AlignEditText(hint: 'نام کاربری', margin: 400,controler: usernameController,),
             Align(alignment: Alignment.bottomCenter,child:
               Container(
-                  margin: const EdgeInsets.only(bottom: 290),child:
-                    const SizedBox(width: 350,child:
-                      Text('رمز عبور خود را فراموش کرده اید ؟',textDirection: TextDirection.rtl,
-                        style: TextStyle(color: Colors.white),) ,
+                  margin: const EdgeInsets.only(bottom: 270),child:
+                  SizedBox(width: 350,child:
+                      MaterialButton(onPressed: ()=>{
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  const Forget()))
+                      },child: SpecialText('رمز عبور خود را فراموش کرده اید ؟'),) ,
                   )
               ),
             ),
@@ -136,8 +139,19 @@ class Login extends State<LoginState> {
 
   void login() async {
     String url = 'https://bsite.net/irantech/ParlarProject/login.aspx?field=$username&password=$password';
-    final response = await http
-        .get(Uri.parse(url));
+    final response = await http.get(Uri.parse(url));
+    // final client = RetryClient(http.Client());
+    // log(await client.read(Uri.parse(url)));
+    log(url);
+    // var response = await http.get(Uri.parse(url), headers: {
+    //   "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+    //   "Access-Control-Allow-Credentials":
+    //   'true', // Required for cookies, authorization headers with HTTPS
+    //   "Access-Control-Allow-Headers":
+    //   "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,locale",
+    //   "Access-Control-Allow-Methods": "POST, OPTIONS"
+    // });
+    //log(response.statusCode.toString());
     if (response.statusCode == 200) {
       log(response.body);
       List<UserDevice> list =  UserDevice.allFromJson(jsonDecode(response.body));
@@ -152,8 +166,13 @@ class Login extends State<LoginState> {
 }
 
 class SignUp extends StatelessWidget {
-  const SignUp({Key? key}) : super(key: key);
-
+  SignUp({Key? key}) : super(key: key);
+  String username = "";
+  String password = "";
+  String name = "";
+  TextEditingController usernameController = new TextEditingController();
+  TextEditingController passwordController = new TextEditingController();
+  TextEditingController nameController = new TextEditingController();
   @override
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
@@ -169,15 +188,32 @@ class SignUp extends StatelessWidget {
             ),
             child: Stack(children: [
               Button(text: 'ثبت نام',margin: 100,textColor: Colors.white,color: orange,onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                    Home(list : List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));},),
-              AlignEditText(margin : 480,hint : 'نام'),
-              AlignEditText(margin : 320,hint : 'شماره تلفن همراه'),
-              AlignEditText(margin : 400,hint :  'پست الکترونیکی'),
-              AlignEditText(hint: 'رمز عبور', margin: 240)
+                username = usernameController.text;
+                password = passwordController.text;
+                name = nameController.text;
+                sign_up(context);
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  WaitingState()));},),
+              AlignEditText(margin : 420,hint : 'نام',controler: nameController,),
+              AlignEditText(margin : 340,hint :  'نام کاربری',controler: usernameController,),
+              AlignEditText(hint: 'رمز عبور', margin: 260,controler: passwordController,)
             ])
         )
     );
+  }
+  void sign_up(BuildContext context) async {
+    String url = 'https://bsite.net/irantech/ParlarProject/sign_up.aspx?username=$username&password=$password&name=$name';
+    final response = await http
+        .get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      log(response.body);
+      Message message =  Message.fromJson(jsonDecode(response.body));
+      if(message.exception.toString().isEmpty) {
+      }
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
   }
 }
 
@@ -210,163 +246,164 @@ class Home extends StatelessWidget {
                 home: DefaultTabController(
                   length: 3,
                   child: Scaffold(backgroundColor: const Color.fromARGB(0, 0, 0, 0) ,
-                    bottomNavigationBar: menu(),
+                    bottomNavigationBar: rooms(),
                     body: TabBarView(
-                      children: [
-                        Scaffold(
-                          body: /*Container(
-                              alignment: Alignment.center,
-                              decoration: const BoxDecoration(
-                                  gradient: LinearGradient(colors: [back, Colors.black],
-                                      transform: GradientRotation(1.57))
-                              ),
-                              child: Row(mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Column(children: [
-                                    const SizedBox(height: 30,),
-                                    Device(iconDir: 'Icon_coffee maker.png', name: 'قهوه ساز',con: context,ID: '0',),
-                                  ],),
-                                  const SizedBox(width: 20,),
-                                  Column(children: [
-                                    const SizedBox(height: 30,),
-                                    Device(iconDir: 'Icon_television.png', name: 'صوتی تصویری',con: context,ID: '1',),
-                                  ],)
-                                ],),
-                          ),*/
-                          MaterialApp(
-                            home: DefaultTabController(
-                              length: 3,
-                              child: Scaffold(backgroundColor: const Color.fromARGB(0, 0, 0, 0) ,
-                                bottomNavigationBar: rooms(),
-                                body: TabBarView(
-                                  children: [
-                                    Scaffold(
-                                      body: Container(
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                            gradient: LinearGradient(colors: [back, Colors.black],
-                                                transform: GradientRotation(1.57))
-                                        ),
-                                        child: Row(mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Column(children: [
-                                              const SizedBox(height: 30,),
-                                              Device(iconDir: 'Icon_coffee maker.png', name: 'قهوه ساز',con: context,ID: '0',),
-                                            ],),
-                                            const SizedBox(width: 20,),
-                                            Column(children: [
-                                              const SizedBox(height: 30,),
-                                              Device(iconDir: 'Icon_television.png', name: 'صوتی تصویری',con: context,ID: '1',),
-                                            ],)
-                                          ],),
-                                      ),
-                                    ),
-                                    Scaffold(
-                                      body: Container(
-                                        child:const Center(child: Text('موردی برای نمایش وجود ندارد',
-                                          style: TextStyle(color: Colors.white),),),
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                            gradient: LinearGradient(colors: [back, Colors.black],
-                                                transform: GradientRotation(1.57))
-                                        ),),
-                                    ),
-                                    Scaffold(
-                                      body: Container(
-                                        child:const Center(child: Text('موردی برای نمایش وجود ندارد',
-                                          style: TextStyle(color: Colors.white),),),
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                            gradient: LinearGradient(colors: [back, Colors.black],
-                                                transform: GradientRotation(1.57))
-                                        ),),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          )
-                        ),
-                        Scaffold(
-                          body: Container(
-                            child:const Center(child: Text('موردی برای نمایش وجود ندارد',
-                              style: TextStyle(color: Colors.white),),),
-                            alignment: Alignment.center,
-                            decoration: const BoxDecoration(
-                                gradient: LinearGradient(colors: [back, Colors.black],
-                                    transform: GradientRotation(1.57))
-                            ),),
-                        ),
-                        Scaffold(
-                          body: Container(
-                            child:const Center(child: Text('موردی برای نمایش وجود ندارد',
-                              style: TextStyle(color: Colors.white),),),
-                            alignment: Alignment.center,
-                            decoration: const BoxDecoration(
-                                gradient: LinearGradient(colors: [back, Colors.black],
-                                    transform: GradientRotation(1.57))
-                            ),),
-                        ),
-                      ],
+                      children: tabViewChildren(context)
                     ),
                   ),
                 ),
               )
     );
   }
-  Widget menu() {
-    const Color orange = Color.fromARGB(255, 255, 74, 28);
-    return Container(
-      color: Color.fromARGB(255,77 ,87, 109),
-      child: const TabBar(
-        labelColor: orange,
-        unselectedLabelColor: Colors.white70,
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: EdgeInsets.all(5.0),
-        indicatorColor: orange,
-        tabs: [
-          Tab(
-            text: "خانه",
-            icon: Icon(Icons.home),
-          ),
-          Tab(
-            text: "علاقه مندی",
-            icon: Icon(Icons.star_border),
-          ),
-          Tab(
-            text: "جست و جو",
-            icon: Icon(Icons.search),
-          ),
-        ],
-      ),
-    );}
   Widget rooms() {
     const Color orange = Color.fromARGB(255, 255, 74, 28);
     const Color back = Color.fromARGB(255, 27, 40, 69);
     return Container(
       color: back,
-      child: const TabBar(
+      child: TabBar(
         labelColor: orange,
         unselectedLabelColor: Colors.white70,
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: EdgeInsets.all(5.0),
         indicatorColor: orange,
-        tabs: [
-          Tab(
-            text: "خانه",
-            icon: Icon(Icons.home),
-          ),
-          Tab(
-            text: "علاقه مندی",
-            icon: Icon(Icons.star_border),
-          ),
-          Tab(
-            text: "جست و جو",
-            icon: Icon(Icons.search),
-          ),
-        ],
+        tabs: tabs()
       ),
-    );}
+    );
+ }
+  List<Tab> tabs(){
+    List<Tab> result = List.generate(0, (index) => Tab());
+    result.add(const Tab(text: 'همه',),);
+    result.add(const Tab(text: 'علاقه مند',),);
+
+    List<String> rooms = List.generate(0, (index) => '');
+    for(int i = 0; i < list.length; i++) {
+      if(!rooms.contains(list.elementAt(i).device_name)) {
+        rooms.add(list.elementAt(i).device_name);
+      }
+    }
+
+    for(int i = 0; i < list.length; i++) {
+      result.add(Tab(text: rooms.elementAt(i),),);
+    }
+    return result;
+  }
+
+  List<Widget> tabViewChildren(BuildContext context){
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    List<Widget> result = List.generate(0, (index) => Button(margin: 0));
+
+    result.add(
+      Scaffold(
+        body: Container(
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [back, Colors.black],
+                  transform: GradientRotation(1.57))
+          ),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center,
+            children: all(context),),
+        ),
+      ),
+    );
+
+    result.add(
+      Scaffold(
+        body: Container(
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [back, Colors.black],
+                  transform: GradientRotation(1.57))
+          ),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center,
+            children: favors(context),),
+        ),
+      ),
+    );
+
+    List<String> rooms = List.generate(0, (index) => '');
+    for(int i = 0; i < list.length; i++) {
+      if(!rooms.contains(list.elementAt(i).device_name)) {
+        rooms.add(list.elementAt(i).device_name);
+      }
+    }
+
+    for(int i = 0; i < rooms.length; i++) {
+      result.add(Scaffold(
+          body: Container(
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center,
+              children: forRooms(context, rooms.elementAt(i)),),
+          ),
+        ),
+      );
+    }
+
+    return result;
+ }
+
+  List<Widget> forRooms(BuildContext context,String room){
+    List<Widget> result = List.generate(0, (index) => Button(margin: 0));
+    List<UserDevice> favorList = List.generate(0, (index) => const UserDevice(token: '', user_id: '', device_name: '', device_type: '', status: '', id: '', exception: '', device_id: ''));
+
+    for(int i = 0; i < list.length; i ++) {
+      if(list.elementAt(i).device_name == room) {
+        favorList.add(list.elementAt(i));
+      }
+    }
+
+    result.add(Column(children: allToWidget(partition(favorList,true), false, context),));
+    result.add(const SizedBox(width: 20,));
+    result.add(Column(children: allToWidget(partition(favorList,false), false, context),));
+    return result;
+  }
+
+  List<Widget> favors(BuildContext context){
+    List<Widget> result = List.generate(0, (index) => Button(margin: 0));
+    List<UserDevice> favorList = List.generate(0, (index) => const UserDevice(token: '', user_id: '', device_name: '', device_type: '', status: '', id: '', exception: '', device_id: ''));
+
+    for(int i = 0; i < list.length; i ++) {
+      if(list.elementAt(i).status == 1) {
+        favorList.add(list.elementAt(i));
+      }
+    }
+
+    result.add(Column(children: allToWidget(partition(favorList,true), false, context),));
+    result.add(const SizedBox(width: 20,));
+    result.add(Column(children: allToWidget(partition(favorList,false), false, context),));
+    return result;
+  }
+
+  List<Widget> all(BuildContext context){
+    List<Widget> result = List.generate(0, (index) => Button(margin: 0));
+    result.add(Column(children: allToWidget(partition(list,true), true, context),));
+    result.add(const SizedBox(width: 20,));
+    result.add(Column(children: allToWidget(partition(list,false), true, context),));
+    return result;
+  }
+  List<UserDevice> partition(List<UserDevice> list,bool isFirst){
+    List<UserDevice> result = List.generate(0, (index) => const UserDevice(token: '', user_id: '', device_name: '', status: '', id: '', device_type: '', exception: '', device_id: ''));
+    for(int i = (isFirst?0:list.length~/2); i < (isFirst?(list.length~/2):list.length); i++) {
+      result.add(list.elementAt(i));
+    }
+    return result;
+  }
+  List<Widget> allToWidget(List<UserDevice> data,bool hasRoomName,BuildContext context){
+   List<Widget> result = List.generate(0, (index) => Button(margin: 0));
+   result.add(const SizedBox(height: 20,));
+   for(int i = 0; i < data.length; i++) {
+     result.add(toWidget(data.elementAt(i), hasRoomName, context));
+     result.add(const SizedBox(height: 20,));
+   }
+   return result;
+  }
+
+  Widget toWidget(UserDevice data,bool hasRoomName,BuildContext context){
+   return Device(token: data.token,con: context, iconDir: 'Icon_television.png', ID: data.id, name: data.device_type + (hasRoomName?'\n'+data.device_name:''));
+  }
 }
 
 class AddCentralDevice extends StatelessWidget {
@@ -551,7 +588,8 @@ class ControlPage extends StatelessWidget {
   bool vol = false;
   final String ID;
   final String name;
-  ControlPage({Key? key,required this.ID,required this.name}) : super(key: key);
+  final String token;
+  ControlPage({Key? key,required this.ID,required this.name,required this.token}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     const Color blue = Color.fromARGB(255,96, 172, 247);
@@ -560,7 +598,7 @@ class ControlPage extends StatelessWidget {
     const Color button = Color.fromARGB(255,77, 87, 109);
     return Scaffold(appBar: AppBar(backgroundColor: back,
         title: Align(
-          alignment: Alignment.centerRight, child: Text(name),))
+          alignment: Alignment.centerRight, child: Text(name.contains('\n')?name.split('\n')[0]:name),))
         , resizeToAvoidBottomInset: false,
         body: Container(
             decoration: const BoxDecoration(
@@ -572,7 +610,7 @@ class ControlPage extends StatelessWidget {
                 Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(width: 85,
-                        child: ElevatedButton(onPressed: ()=>{},
+                        child: ElevatedButton(onPressed: ()=>{funtion(context, 'power')},
                           child: Icon(Icons.power_settings_new),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(orange),
@@ -599,8 +637,8 @@ class ControlPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 50,),
                       SizedBox(width: 85,
-                          child: ElevatedButton(onPressed: ()=>{},
-                            child: const Icon(Icons.mic_rounded),
+                          child: ElevatedButton(onPressed: ()=>{funtion(context, 'menu')},
+                            child: SpecialText('menu'),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(button),
                                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -621,7 +659,7 @@ class ControlPage extends StatelessWidget {
                             Stack(children: [
                               Align(alignment: Alignment.topCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                  ElevatedButton(onPressed: ()=>{},
+                                  ElevatedButton(onPressed: ()=>{funtion(context, 'ch')},
                                       child:const Center(child: Icon(Icons.keyboard_arrow_up,color: Colors.white,)),
                                       style: ButtonStyle(
                                           backgroundColor: MaterialStateProperty.all(button),
@@ -640,7 +678,7 @@ class ControlPage extends StatelessWidget {
                               ),
                               Align(alignment: Alignment.bottomCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                    ElevatedButton(onPressed: ()=>{},
+                                    ElevatedButton(onPressed: ()=>{funtion(context, 'ch-')},
                                       child: const Center(child: Icon(Icons.keyboard_arrow_down,color: Colors.white,),),
                                       style: ButtonStyle(
                                           backgroundColor: MaterialStateProperty.all(button),
@@ -668,7 +706,7 @@ class ControlPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20,),
                         SizedBox(height: 55,width: 55,child:
-                          ElevatedButton(onPressed: ()=>{},
+                          ElevatedButton(onPressed: ()=>{funtion(context, 'mute')},
                             child: const Icon(Icons.volume_off),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(button),
@@ -704,10 +742,10 @@ class ControlPage extends StatelessWidget {
                                     ),
                                   )
                                 ),
-                                ButtonOnControl(margin: EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {  },),
-                                ButtonOnControl(margin: EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {  },),
-                                ButtonOnControl(margin: EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {  },),
-                                ButtonOnControl(margin: EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {  },)
+                                ButtonOnControl(margin: const EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {funtion(context, 'up');  },),
+                                ButtonOnControl(margin: const EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {funtion(context, 'left');  },),
+                                ButtonOnControl(margin: const EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {funtion(context, 'right'); },),
+                                ButtonOnControl(margin: const EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {funtion(context, 'down');  },)
                               ]
                             ),
                           ),
@@ -721,7 +759,7 @@ class ControlPage extends StatelessWidget {
                             Stack(children: [
                               Align(alignment: Alignment.topCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                  ElevatedButton(onPressed: ()=>{},
+                                  ElevatedButton(onPressed: ()=>{funtion(context, 'vol')},
                                     child:const Center(child: Icon(Icons.volume_up,color: Colors.white,)),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -740,7 +778,7 @@ class ControlPage extends StatelessWidget {
                               ),
                               Align(alignment: Alignment.bottomCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                  ElevatedButton(onPressed: ()=>{},
+                                  ElevatedButton(onPressed: ()=>{funtion(context, 'vol-')},
                                     child: const Center(child: Icon(Icons.volume_down,color: Colors.white,),),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -767,7 +805,7 @@ class ControlPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20,),
                         SizedBox(height: 55,width: 55,child:
-                          ElevatedButton(onPressed: ()=>{},
+                          ElevatedButton(onPressed: ()=>{funtion(context, 'exit')},
                             child: const Icon(Icons.exit_to_app),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -784,6 +822,32 @@ class ControlPage extends StatelessWidget {
               ],),
         )
     );
+  }
+  void funtion(BuildContext context,String function) async {
+    String s = token.trim();
+    String url = 'https://bsite.net/irantech/ParlarProject/Running.aspx?deviceid=$ID&functionname=$function&token=$s';
+    final response = await http.get(Uri.parse(url));
+    // final client = RetryClient(http.Client());
+    // log(await client.read(Uri.parse(url)));
+    log(url.substring(0,60));
+    log(url.substring(60,url.length));
+    // var response = await http.get(Uri.parse(url), headers: {
+    //   "Access-Control-Allow-Origin": "*", // Required for CORS support to work
+    //   "Access-Control-Allow-Credentials":
+    //   'true', // Required for cookies, authorization headers with HTTPS
+    //   "Access-Control-Allow-Headers":
+    //   "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,locale",
+    //   "Access-Control-Allow-Methods": "POST, OPTIONS"
+    // });
+    //log(response.statusCode.toString());
+    if (response.statusCode == 200) {
+      log(response.body);
+      //List<UserDevice> list =  UserDevice.allFromJson(jsonDecode(response.body));
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
   }
 }
 
@@ -824,6 +888,28 @@ class Waiting extends State<WaitingState> with SingleTickerProviderStateMixin {
               Center(child: SpecialText('لطفا صبر کنید ...'),)
             ],)
         )
+    );
+  }
+}
+
+class Forget extends StatelessWidget {
+  const Forget({Key? key}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: const Align(
+          alignment: Alignment.centerRight, child: Text('فراموشی'),))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child:Center(child: SpecialText('برای دریافت مجدد رمز عبو و نام کاربری، مشخصات دستگاه خود را به ایمیل زیر ارسال کنید\n irantech.parlar@gmail.com'),)
+            )
     );
   }
 }
@@ -924,9 +1010,10 @@ class BackCube extends SizedBox{
 }
 
 class SpecialText extends Text{
-  SpecialText(String data, {Key? key,TextStyle? textStyle,double? fountSize}) : super(data,key: key,
-    style: textStyle ?? TextStyle(fontSize: fountSize !=null ? fountSize : 20,color: Colors.white),
-      textDirection: TextDirection.rtl);
+  SpecialText(String data, {Key? key,TextStyle? textStyle,double? fountSize,TextDirection? textDir,TextAlign? textAlign}) : super(data,key: key,
+    style: textStyle ?? TextStyle(fontSize: fountSize ?? 20,color: Colors.white),
+      textDirection: textDir ?? TextDirection.rtl,
+      textAlign: textAlign);
 }
 
 class DeviceType extends SizedBox{
@@ -997,11 +1084,8 @@ class ListElement extends SizedBox{
 }
 
 class Device extends SizedBox{
-  final String ID ;
-  final String name;
-  final String iconDir;
-  Device( {Key? key,required BuildContext con,required this.iconDir,required this.ID,required this.name,}) :
-        super(key: key,width: 170,height: 110,child:
+  Device( {Key? key,required BuildContext con,required String iconDir,required String token,required String ID,required String name,TextDirection? textDir}) :
+        super(key: key,width: 170,height: 130,child:
       ElevatedButton(style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
           shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -1010,13 +1094,13 @@ class Device extends SizedBox{
               )
           )),
         onPressed: () {
-          Navigator.of(con).push(MaterialPageRoute(builder: (context) => ControlPage(ID: ID, name: name) ));
+          Navigator.of(con).push(MaterialPageRoute(builder: (context) => ControlPage(ID: ID, name: name,token: token,) ));
           },
         child: Center(child:
         Column(mainAxisAlignment: MainAxisAlignment.center,children: [
           SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
           const SizedBox(height: 5,),
-          SpecialText(name,fountSize : 15)
+          SpecialText(name,fountSize : 15,textDir: textDir,textAlign: TextAlign.center,)
         ],),),
       )
       );
@@ -1073,6 +1157,26 @@ class UserDevice {
         status: json['status'],
         token: json['token'],
         user_id: json['user_id']
+    );
+  }
+}
+
+class Message {
+  final String id;
+  final String text;
+  final String exception;
+
+  const Message({
+    required this.id,
+    required this.text,
+    required this.exception,
+  });
+  
+  factory Message.fromJson(Map<String, dynamic> json) {
+    return Message(
+        id: json['id'],
+        text: json['text'],
+        exception: json['exception'],
     );
   }
 }
