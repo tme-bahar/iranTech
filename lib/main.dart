@@ -113,7 +113,6 @@ class Login extends State<LoginState> {
           child: Stack(children: [
             //login button
             Button(text:'ورود' ,margin: 100,color: blue,textColor: Colors.black,onPressed: () {
-              //Navigator.of(context).push(MaterialPageRoute(builder: (context) => const Home()));
               username = usernameController.text;
               password = passwordController.text;
               login();
@@ -139,28 +138,31 @@ class Login extends State<LoginState> {
 
   void login() async {
     String url = 'https://bsite.net/irantech/ParlarProject/login.aspx?field=$username&password=$password';
-    final response = await http.get(Uri.parse(url));
-    // final client = RetryClient(http.Client());
-    // log(await client.read(Uri.parse(url)));
-    log(url);
-    // var response = await http.get(Uri.parse(url), headers: {
-    //   "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-    //   "Access-Control-Allow-Credentials":
-    //   'true', // Required for cookies, authorization headers with HTTPS
-    //   "Access-Control-Allow-Headers":
-    //   "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,locale",
-    //   "Access-Control-Allow-Methods": "POST, OPTIONS"
-    // });
-    //log(response.statusCode.toString());
-    if (response.statusCode == 200) {
-      log(response.body);
-      List<UserDevice> list =  UserDevice.allFromJson(jsonDecode(response.body));
-      if(list.elementAt(0).exception.toString().isEmpty)
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  Home(list: list)));
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load album');
+    try {
+      final response = await http.get(Uri.parse(url));
+      int code = response.statusCode;
+      log(url);
+      if (response.statusCode == 200) {
+        log(response.body);
+        List<UserDevice> list = UserDevice.allFromJson(
+            jsonDecode(response.body));
+        if (list
+            .elementAt(0)
+            .exception
+            .toString()
+            .isEmpty) {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => HomeState(list: list)));
+        }
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load album');
+      }
+    }catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString()),
+      ));
     }
   }
 }
@@ -217,16 +219,21 @@ class SignUp extends StatelessWidget {
   }
 }
 
-class Home extends StatelessWidget {
+class HomeState extends StatefulWidget {
   List<UserDevice> list ;
-  Home({Key? key,required this.list}) : super(key: key);
- void startAdd(){
-   (context) =>  Login();
- }
+  HomeState({Key? key,required this.list}) : super(key: key);
+
+  @override
+  State<HomeState> createState() => Home(list: list);
+}
+
+class Home extends State<HomeState> {
+  List<UserDevice> list ;
+  Color orange = const Color.fromARGB(255, 255, 74, 28);
+  Home({Key? key,required this.list}) : super();
   @override
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
-    const Color orange = Color.fromARGB(255, 255, 74, 28);
     return Scaffold(appBar:
         AppBar(
             actions:  const [
@@ -272,8 +279,8 @@ class Home extends StatelessWidget {
  }
   List<Tab> tabs(){
     List<Tab> result = List.generate(0, (index) => Tab());
-    result.add(const Tab(text: 'همه',),);
-    result.add(const Tab(text: 'علاقه مند',),);
+    result.add(const Tab(child:Icon(Icons.home),));
+    result.add(const Tab(child:Icon(Icons.star_border),));
 
     List<String> rooms = List.generate(0, (index) => '');
     for(int i = 0; i < list.length; i++) {
@@ -328,7 +335,11 @@ class Home extends StatelessWidget {
     }
 
     for(int i = 0; i < rooms.length; i++) {
-      result.add(Scaffold(
+      result.add(
+        Scaffold(
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {  }
+            ,heroTag: '$i',child:const Icon(Icons.wifi_tethering,color: Colors.white,),backgroundColor: orange,),
           body: Container(
             alignment: Alignment.center,
             decoration: const BoxDecoration(
@@ -393,7 +404,7 @@ class Home extends StatelessWidget {
   }
   List<Widget> allToWidget(List<UserDevice> data,bool hasRoomName,BuildContext context){
    List<Widget> result = List.generate(0, (index) => Button(margin: 0));
-   result.add(const SizedBox(height: 20,));
+   result.add(const SizedBox(height: 20,width: 170,));
    for(int i = 0; i < data.length; i++) {
      result.add(toWidget(data.elementAt(i), hasRoomName, context));
      result.add(const SizedBox(height: 20,));
@@ -402,7 +413,7 @@ class Home extends StatelessWidget {
   }
 
   Widget toWidget(UserDevice data,bool hasRoomName,BuildContext context){
-   return Device(token: data.token,con: context, iconDir: 'Icon_television.png', ID: data.id, name: data.device_type + (hasRoomName?'\n'+data.device_name:''));
+   return Device(token: data.token,con: context, iconDir: 'Icon_television.png', ID: data.id, name: data.device_type + (hasRoomName?'\n'+data.device_name:''),stared: data.status == 1,);
   }
 }
 
@@ -585,11 +596,11 @@ class ListPage extends StatelessWidget {
 }
 
 class ControlPage extends StatelessWidget {
-  bool vol = false;
   final String ID;
   final String name;
   final String token;
-  ControlPage({Key? key,required this.ID,required this.name,required this.token}) : super(key: key);
+  final bool stared;
+  ControlPage({Key? key,required this.ID,required this.name,required this.token,required this.stared}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     const Color blue = Color.fromARGB(255,96, 172, 247);
@@ -610,7 +621,7 @@ class ControlPage extends StatelessWidget {
                 Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(width: 85,
-                        child: ElevatedButton(onPressed: ()=>{funtion(context, 'power')},
+                        child: ElevatedButton(onPressed: ()=>{function(context, 'power')},
                           child: Icon(Icons.power_settings_new),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(orange),
@@ -637,7 +648,7 @@ class ControlPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 50,),
                       SizedBox(width: 85,
-                          child: ElevatedButton(onPressed: ()=>{funtion(context, 'menu')},
+                          child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
                             child: SpecialText('menu'),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(button),
@@ -650,7 +661,7 @@ class ControlPage extends StatelessWidget {
                           ),
                       )
                     ]),
-                const SizedBox(height: 50,),
+                const SizedBox(height: 30,),
                 Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Column(mainAxisAlignment: MainAxisAlignment.center,children: [
@@ -659,7 +670,7 @@ class ControlPage extends StatelessWidget {
                             Stack(children: [
                               Align(alignment: Alignment.topCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                  ElevatedButton(onPressed: ()=>{funtion(context, 'ch')},
+                                  ElevatedButton(onPressed: ()=>{function(context, 'ch')},
                                       child:const Center(child: Icon(Icons.keyboard_arrow_up,color: Colors.white,)),
                                       style: ButtonStyle(
                                           backgroundColor: MaterialStateProperty.all(button),
@@ -678,7 +689,7 @@ class ControlPage extends StatelessWidget {
                               ),
                               Align(alignment: Alignment.bottomCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                    ElevatedButton(onPressed: ()=>{funtion(context, 'ch-')},
+                                    ElevatedButton(onPressed: ()=>{function(context, 'ch-')},
                                       child: const Center(child: Icon(Icons.keyboard_arrow_down,color: Colors.white,),),
                                       style: ButtonStyle(
                                           backgroundColor: MaterialStateProperty.all(button),
@@ -706,7 +717,7 @@ class ControlPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20,),
                         SizedBox(height: 55,width: 55,child:
-                          ElevatedButton(onPressed: ()=>{funtion(context, 'mute')},
+                          ElevatedButton(onPressed: ()=>{function(context, 'mute')},
                             child: const Icon(Icons.volume_off),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(button),
@@ -742,10 +753,10 @@ class ControlPage extends StatelessWidget {
                                     ),
                                   )
                                 ),
-                                ButtonOnControl(margin: const EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {funtion(context, 'up');  },),
-                                ButtonOnControl(margin: const EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {funtion(context, 'left');  },),
-                                ButtonOnControl(margin: const EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {funtion(context, 'right'); },),
-                                ButtonOnControl(margin: const EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {funtion(context, 'down');  },)
+                                ButtonOnControl(margin: const EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {function(context, 'up');  },),
+                                ButtonOnControl(margin: const EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {function(context, 'left');  },),
+                                ButtonOnControl(margin: const EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {function(context, 'right'); },),
+                                ButtonOnControl(margin: const EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {function(context, 'down');  },)
                               ]
                             ),
                           ),
@@ -759,7 +770,7 @@ class ControlPage extends StatelessWidget {
                             Stack(children: [
                               Align(alignment: Alignment.topCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                  ElevatedButton(onPressed: ()=>{funtion(context, 'vol')},
+                                  ElevatedButton(onPressed: ()=>{function(context, 'vol')},
                                     child:const Center(child: Icon(Icons.volume_up,color: Colors.white,)),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -778,7 +789,7 @@ class ControlPage extends StatelessWidget {
                               ),
                               Align(alignment: Alignment.bottomCenter,child:
                                 SizedBox(width: 55,height: 87,child:
-                                  ElevatedButton(onPressed: ()=>{funtion(context, 'vol-')},
+                                  ElevatedButton(onPressed: ()=>{function(context, 'vol-')},
                                     child: const Center(child: Icon(Icons.volume_down,color: Colors.white,),),
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -805,7 +816,7 @@ class ControlPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20,),
                         SizedBox(height: 55,width: 55,child:
-                          ElevatedButton(onPressed: ()=>{funtion(context, 'exit')},
+                          ElevatedButton(onPressed: ()=>{function(context, 'exit')},
                             child: const Icon(Icons.exit_to_app),
                             style: ButtonStyle(
                                 backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -819,33 +830,190 @@ class ControlPage extends StatelessWidget {
                         )
                       ],)
                     ]),
+
+                const SizedBox(height: 30,),
+
+                Row(mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(width: 85,
+                        child: ElevatedButton(onPressed: ()=>{function(context, 'power')},
+                          child: SpecialText('TV'),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(button),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(10))
+                                  )
+                              )),
+                        ),
+                      ),
+                      const SizedBox(width: 50,),
+                      SizedBox(width: 85,
+                        child: ElevatedButton(onPressed: ()=>{},
+                          child: SpecialText('DVD'),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(button),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      side: BorderSide(color: blue),
+                                      borderRadius: BorderRadius.all(Radius.circular(10))
+                                  )
+                              )),
+                        ),
+                      ),
+                      const SizedBox(width: 50,),
+                      SizedBox(width: 85,
+                        child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
+                          child: SpecialText('PC'),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(button),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      side: BorderSide(color: blue),
+                                      borderRadius: BorderRadius.all(Radius.circular(10))
+                                  )
+                              )),
+                        ),
+                      )
+                    ]),
+                const SizedBox(height: 20,),
+
+                SizedBox(width: 350,height: 75,
+                  child: ElevatedButton(onPressed: ()=>{
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  KeyPad(token: token,ID: ID,name: name,)))},
+                    child: SpecialText('کیپد'),
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(button),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            const RoundedRectangleBorder(
+                                side: BorderSide(color: blue),
+                                borderRadius: BorderRadius.all(Radius.circular(10))
+                            )
+                        )),
+                  ),
+                )
               ],),
         )
     );
   }
-  void funtion(BuildContext context,String function) async {
+  void function(BuildContext context,String function) async {
     String s = token.trim();
     String url = 'https://bsite.net/irantech/ParlarProject/Running.aspx?deviceid=$ID&functionname=$function&token=$s';
     final response = await http.get(Uri.parse(url));
-    // final client = RetryClient(http.Client());
-    // log(await client.read(Uri.parse(url)));
     log(url.substring(0,60));
     log(url.substring(60,url.length));
-    // var response = await http.get(Uri.parse(url), headers: {
-    //   "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-    //   "Access-Control-Allow-Credentials":
-    //   'true', // Required for cookies, authorization headers with HTTPS
-    //   "Access-Control-Allow-Headers":
-    //   "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,locale",
-    //   "Access-Control-Allow-Methods": "POST, OPTIONS"
-    // });
-    //log(response.statusCode.toString());
     if (response.statusCode == 200) {
       log(response.body);
-      //List<UserDevice> list =  UserDevice.allFromJson(jsonDecode(response.body));
     } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
+  void star(BuildContext context) async {
+    int status = stared ? 0 : 1;
+    String url = 'https://bsite.net/irantech/ParlarProject/status.aspx?status=$status&id=$ID';
+    try {
+      final response = await http.get(Uri.parse(url));
+      int code = response.statusCode;
+      log(url);
+      if (response.statusCode == 200) {
+        log(response.body);
+        List<UserDevice> list = UserDevice.allFromJson(
+            jsonDecode(response.body));
+        if (list.elementAt(0).exception.toString().isEmpty)
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeState(list: list)));
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load album');
+      }
+    }catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString()),
+      ));
+    }
+  }
+}
+
+class KeyPad extends StatelessWidget {
+  final String ID;
+  final String name;
+  final String token;
+  KeyPad({Key? key,required this.ID,required this.name,required this.token}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    const Color button = Color.fromARGB(255,77, 87, 109);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title: Align(
+          alignment: Alignment.centerRight, child: Text(name.contains('\n')?name.split('\n')[0]:name),))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [back, Colors.black],
+                  transform: GradientRotation(1.57))
+          ),
+          child:Column(mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    NumericControlKey(text: '',number: '1',token: token,ID: ID,context: context,onPressed:()=> function(context,'1'),),
+                    const SizedBox(width: 30,),
+                    NumericControlKey(text: 'ABC',number: '2',token: token,ID: ID,context: context,onPressed:()=> function(context,'2'),),
+                    const SizedBox(width: 30,),
+                    NumericControlKey(text: 'DEF',number: '3',token: token,ID: ID,context: context,onPressed:()=> function(context,'3'),),
+                  ]),
+              const SizedBox(height: 20,),
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    NumericControlKey(text: 'GHI',number: '4',token: token,ID: ID,context: context,onPressed:()=> function(context,'4'),),
+                    const SizedBox(width: 30,),
+                    NumericControlKey(text: 'JKL',number: '5',token: token,ID: ID,context: context,onPressed:()=> function(context,'5'),),
+                    const SizedBox(width: 30,),
+                    NumericControlKey(text: 'MNO',number: '6',token: token,ID: ID,context: context,onPressed:()=> function(context,'6'),),
+                  ]),
+              const SizedBox(height: 20,),
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    NumericControlKey(text: 'PQRS',number: '7',token: token,ID: ID,context: context,onPressed:()=> function(context,'7'),),
+                    const SizedBox(width: 30,),
+                    NumericControlKey(text: 'TUV',number: '8',token: token,ID: ID,context: context,onPressed:()=> function(context,'8'),),
+                    const SizedBox(width: 30,),
+                    NumericControlKey(text: 'WXYZ',number: '9',token: token,ID: ID,context: context,onPressed:()=> function(context,'9'),),
+                  ]),
+              const SizedBox(height: 20,),
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    NumericControlKey(text: '+',number: '0',token: token,ID: ID,context: context,onPressed:()=> function(context,'0'),),
+                  ]),
+              const SizedBox(height: 20,),
+              SizedBox(width: 350,height: 75,
+                child: ElevatedButton(onPressed: ()=>{Navigator.pop(context)},
+                  child: SpecialText('کنترل'),
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(button),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          const RoundedRectangleBorder(
+                              side: BorderSide(color: blue),
+                              borderRadius: BorderRadius.all(Radius.circular(10))
+                          )
+                      )),
+                ),
+              )
+            ],),
+        )
+    );
+  }
+  void function(BuildContext context,String function) async {
+    String s = token.trim();
+    String url = 'https://bsite.net/irantech/ParlarProject/Running.aspx?deviceid=$ID&functionname=$function&token=$s';
+    final response = await http.get(Uri.parse(url));
+    log(url.substring(0,60));
+    log(url.substring(60,url.length));
+    if (response.statusCode == 200) {
+      log(response.body);
+    } else {
       throw Exception('Failed to load album');
     }
   }
@@ -1075,7 +1243,7 @@ class ListElement extends SizedBox{
         Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
             K3 == null ?
             ListPage(K1: K1,K2:K2,table: table,):
-            Home(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));},
+            HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));},
       child: Align(alignment: Alignment.centerRight,child:
         SpecialText(K3 ?? K2,fountSize : 15)
       ,),
@@ -1084,7 +1252,7 @@ class ListElement extends SizedBox{
 }
 
 class Device extends SizedBox{
-  Device( {Key? key,required BuildContext con,required String iconDir,required String token,required String ID,required String name,TextDirection? textDir}) :
+  Device( {Key? key,required BuildContext con,required String iconDir,required String token,required String ID,required bool stared,required String name,TextDirection? textDir}) :
         super(key: key,width: 170,height: 130,child:
       ElevatedButton(style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
@@ -1094,14 +1262,17 @@ class Device extends SizedBox{
               )
           )),
         onPressed: () {
-          Navigator.of(con).push(MaterialPageRoute(builder: (context) => ControlPage(ID: ID, name: name,token: token,) ));
+          Navigator.of(con).push(MaterialPageRoute(builder: (context) => ControlPage(ID: ID, name: name,token: token,stared: stared,) ));
           },
-        child: Center(child:
-        Column(mainAxisAlignment: MainAxisAlignment.center,children: [
-          SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
-          const SizedBox(height: 5,),
-          SpecialText(name,fountSize : 15,textDir: textDir,textAlign: TextAlign.center,)
-        ],),),
+        child: Stack(children: [
+          Center(child:
+            Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+              SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
+              const SizedBox(height: 5,),
+              SpecialText(name,fountSize : 15,textDir: textDir,textAlign: TextAlign.center,)
+            ],),
+          ),
+        ],)
       )
       );
 }
@@ -1119,6 +1290,18 @@ class ButtonOnControl extends Align{
       )
   ),
   );
+}
+
+class NumericControlKey extends SizedBox{
+   NumericControlKey({Key? key,required VoidCallback onPressed,required String number,required String text,required String ID,required String token,required BuildContext context}) : super(key: key,width: 80,height: 80,child:
+    ElevatedButton(onPressed: onPressed, child: Column(children: [SizedBox(height: 12,), SpecialText(number,fountSize: 35,),SpecialText(text,fountSize: 10,)],),
+      style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Color.fromARGB(255,77, 87, 109)),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50.0),
+          ),
+        ),
+      ),));
 }
 
 
@@ -1180,3 +1363,4 @@ class Message {
     );
   }
 }
+
