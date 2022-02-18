@@ -6,18 +6,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
-import 'package:http/retry.dart';
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
+  List<UserDevice> list  = List.generate(0, (index) => UD());
+  User user = const User(id: '',exception: '',password: '',username: '',name: '');
+  MyApp({Key? key}) : super(key: key);
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp(routes: {
+      'login' : (BuildContext context) => LoginState(myApp: this,),
+      'waiting' : (BuildContext context) => WaitingState(),
+      'signup' : (BuildContext context) => SignUp(),
+      'home' : (BuildContext context) => HomeState(list: list,myApp: this,),
+      'edit' : (BuildContext context) => EditUser(user: user,),
+    },
       title: 'Iran tech',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -71,7 +77,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               Center(child: SizedBox(width: 260,child: Image.asset('assets/logo.png'),)),
               //login button
               Button(color: blue,margin: 100,textColor: Colors.black,text: 'ورود',onPressed:() {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginState()));
+                //Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginState()));
+                Navigator.pushNamed(context, 'login');
                 } ,
               ),
               //sign up button
@@ -87,12 +94,15 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 }
 
 class LoginState extends StatefulWidget {
+  MyApp myApp;
+  LoginState({Key? key, required this.myApp}) : super(key: key);
   @override
-  State<LoginState> createState() => Login();
+  State<LoginState> createState() => Login(myApp: myApp);
 }
 
 class Login extends State<LoginState> {
-  Login({Key? key}) : super();
+  MyApp myApp;
+  Login({Key? key,required this.myApp}) : super();
   String username = "";
   String password = "";
   TextEditingController usernameController = new TextEditingController();
@@ -116,7 +126,7 @@ class Login extends State<LoginState> {
               username = usernameController.text;
               password = passwordController.text;
               login();
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  WaitingState()));
+              Navigator.pushNamed(context, 'waiting');
               },),
             //password text filed
             AlignEditText(hint: 'رمز عبور', margin: 320,controler: passwordController,),
@@ -151,8 +161,9 @@ class Login extends State<LoginState> {
             .exception
             .toString()
             .isEmpty) {
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => HomeState(list: list)));
+          Navigator.popUntil(context,ModalRoute.withName('login'),);
+          myApp.list = list;
+          Navigator.pushNamed(context, 'home');
         }
       } else {
         // If the server did not return a 200 OK response,
@@ -210,6 +221,7 @@ class SignUp extends StatelessWidget {
       log(response.body);
       Message message =  Message.fromJson(jsonDecode(response.body));
       if(message.exception.toString().isEmpty) {
+        Navigator.popUntil(context,ModalRoute.withName('signup'),);
       }
     } else {
       // If the server did not return a 200 OK response,
@@ -221,16 +233,18 @@ class SignUp extends StatelessWidget {
 
 class HomeState extends StatefulWidget {
   List<UserDevice> list ;
-  HomeState({Key? key,required this.list}) : super(key: key);
+  MyApp myApp;
+  HomeState({Key? key,required this.list,required this.myApp}) : super(key: key);
 
   @override
-  State<HomeState> createState() => Home(list: list);
+  State<HomeState> createState() => Home(list: list,myApp: myApp);
 }
 
 class Home extends State<HomeState> {
   List<UserDevice> list ;
+  MyApp myApp;
   Color orange = const Color.fromARGB(255, 255, 74, 28);
-  Home({Key? key,required this.list}) : super();
+  Home({Key? key,required this.list,required this.myApp}) : super();
   @override
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
@@ -244,8 +258,16 @@ class Home extends State<HomeState> {
             backgroundColor: back,
             title:
             Row(children: [
-              IconButton(icon:const Icon(Icons.help), onPressed: () {  },),
-              IconButton(icon:const Icon(Icons.add), onPressed : (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));})],
+              IconButton(icon:const Icon(Icons.person), onPressed: () {
+                //ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("این عمل برای شما امکان پذیر نمی باشد.\n لطفا از وبسایت استفاده کرده و یا جدید ترین نسخه اپلیکیشن را از لینک زیر دانلود کنید \n https://iran-tech.github.io/app.apk \nلینک وبسایت :\n  iran-tech.github.io")));
+                //Navigator.of(context).push(MaterialPageRoute(builder: (context) => EditUser()));
+                Navigator.pushNamed(context, 'waiting');
+                show(context, 'khanchi');
+                },),
+              IconButton(icon:const Icon(Icons.add), onPressed : (){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("این عمل برای شما امکان پذیر نمی باشد.\n لطفا از وبسایت استفاده کرده و یا جدید ترین نسخه اپلیکیشن را از لینک زیر دانلود کنید \n https://iran-tech.github.io/app.apk \nلینک وبسایت :\n  iran-tech.github.io")));
+                //Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));
+              })],
             )
         ),
         resizeToAvoidBottomInset: false,
@@ -415,6 +437,30 @@ class Home extends State<HomeState> {
   Widget toWidget(UserDevice data,bool hasRoomName,BuildContext context){
    return Device(token: data.token,con: context, iconDir: 'Icon_television.png', ID: data.id, name: data.device_type + (hasRoomName?'\n'+data.device_name:''),stared: data.status == 1,);
   }
+
+
+
+  void show(BuildContext context,String username) async {
+
+    String url = 'https://bsite.net/irantech/ParlarProject/ShowUser.aspx?username=$username';
+    log(url);
+    final response = await http
+        .get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      log(response.body);
+      User user =  User.fromJson(jsonDecode(response.body));
+      if(user.exception.toString().isEmpty) {
+        myApp.user = user;
+        Navigator.popUntil(context,ModalRoute.withName('home'),);
+        Navigator.pushNamed(context, 'edit');
+        //Navigator.of(context).push(MaterialPageRoute(builder: (context) => EditUser(user: user)));
+      }
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
 }
 
 class AddCentralDevice extends StatelessWidget {
@@ -435,46 +481,24 @@ class AddCentralDevice extends StatelessWidget {
                     transform: GradientRotation(1.57))
             ),
             child: Stack(children: [
-              Align(alignment: Alignment.topRight,child: SpecialText('توکن دستگاه خود را وارد کنید'),),
-              Center(child: EditText(hint: 'توکن دستگاه',),),
-              IcButton(text: 'QR code',margin: 50, icon: const Icon(Icons.qr_code_outlined,color: Colors.white,),
-                color:orange ,textColor: Colors.white,onPressed: ()=>{Navigator.of(context).push(MaterialPageRoute(builder: (context) => Activate1()))},)
-            ])
-        )
-    );
-  }
-}
-
-class Activate1 extends StatelessWidget {
-  const Activate1({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    const Color blue = Color.fromARGB(255,96, 172, 247);
-    const Color back = Color.fromARGB(255, 27, 40, 69);
-    const Color orange = Color.fromARGB(255, 255, 74, 28);
-    return Scaffold(appBar: AppBar(backgroundColor: back,
-        title: const Align(
-          alignment: Alignment.centerRight, child: Text('راه اندازی'),))
-        , resizeToAvoidBottomInset: false,
-        body: Container(
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [back, Colors.black],
-                    transform: GradientRotation(1.57))
-            ),
-            child: Stack(children: [
-              Align(alignment: Alignment.topRight,child: SpecialText('لطفا اطلاعات مربوط به دستگاه مرکزی خود را وارد کنید'),),
-              Center(child: Column(mainAxisAlignment: MainAxisAlignment.center,children : [
-                EditText(hint: 'نام دستگاه',),
-                const SizedBox(height: 20,),
-                EditText(hint: 'مکان مورد استفاده',),
-                const SizedBox(height: 20,),
-                EditText(hint: 'رمز عبور',),
-              ] ),),
+              Align(alignment: Alignment.topRight,child: SpecialText('توکن و مکان دستگاه خود را وارد کنید'),),
               Row(mainAxisAlignment: MainAxisAlignment.center,children: [
-                Button(width: 250,margin: 40,onPressed: ()=>{Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddDevice()))
-                  },textColor: Colors.white,color: blue,text: 'مرحله بعد',),
-              ],)
+                Column(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    EditText(hint: 'مکان مورد استفاده',),
+                    const SizedBox(height: 30,),
+                    EditText(hint: 'توکن دستگاه',),
+                    const SizedBox(height: 5,),
+                    TokenElement(context: context, text: 'gjhrDt_256_WWghs...(room1)'),
+                    const SizedBox(height: 2,),
+                    TokenElement(context: context, text: 't_2hrD56ghs_WgjW...(room2)'),
+                    const SizedBox(height: 2,),
+                    TokenElement(context: context, text: 'WDt_2Wghsgjhr020...(room3)')
+                    ],)
+                ],
+              ),
+              Button(text: 'بعدی',margin: 50,
+                color:orange ,textColor: Colors.white,onPressed: ()=>{Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddDevice()))},)
             ])
         )
     );
@@ -501,12 +525,12 @@ class AddDevice extends StatelessWidget {
             child:SingleChildScrollView(child:
               Column(children: [
                 Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
-                EditText(hint: 'جست و جو بین محصولات',),
+
                 const SizedBox(height: 20,),
                   Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                     Column(children: [
-                      DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز',K: 'power',con: context,),
+                      DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز',K: 'تلویزیون',con: context,),
                       const SizedBox(height: 20,),
                       DeviceType(iconDir: 'Icon_refrigerator.png', text: 'یخچال',K: 'refrigerator',con: context,),
                       const SizedBox(height: 20,),
@@ -864,7 +888,7 @@ class ControlPage extends StatelessWidget {
                       const SizedBox(width: 50,),
                       SizedBox(width: 85,
                         child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
-                          child: SpecialText('PC'),
+                          child: SpecialText('Source',fountSize: 15,),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(button),
                               shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -919,8 +943,8 @@ class ControlPage extends StatelessWidget {
         log(response.body);
         List<UserDevice> list = UserDevice.allFromJson(
             jsonDecode(response.body));
-        if (list.elementAt(0).exception.toString().isEmpty)
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeState(list: list)));
+        //if (list.elementAt(0).exception.toString().isEmpty)
+          //Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeState(list: list)));
       } else {
         // If the server did not return a 200 OK response,
         // then throw an exception.
@@ -1022,6 +1046,7 @@ class KeyPad extends StatelessWidget {
 class WaitingState extends StatefulWidget {
   @override
   State<WaitingState> createState() => Waiting();
+  void finish() => SystemNavigator.pop();
 }
 
 class Waiting extends State<WaitingState> with SingleTickerProviderStateMixin {
@@ -1079,6 +1104,415 @@ class Forget extends StatelessWidget {
             child:Center(child: SpecialText('برای دریافت مجدد رمز عبو و نام کاربری، مشخصات دستگاه خود را به ایمیل زیر ارسال کنید\n irantech.parlar@gmail.com'),)
             )
     );
+  }
+}
+
+class EditUser extends StatelessWidget {
+  EditUser({Key? key,required User user}) : super(key: key){
+    id = user.id;
+    username = user.username;
+    password = user.password;
+    name = user.name;
+    usernameController.text = username;
+    passwordController.text = password;
+    nameController.text = name;
+  }
+  String id = "";
+  String username = "";
+  String password = "";
+  String name = "";
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    return Scaffold(resizeToAvoidBottomInset: false,
+        appBar: AppBar(titleTextStyle: const TextStyle(color: Colors.white,fontSize: 25,)
+            ,backgroundColor: back,title: Align(alignment: Alignment.centerRight,child: Text('ویرایش'),)),
+        body: Container(
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [back,back,back, Colors.black],
+                    transform: GradientRotation(1.57))
+            ),
+            child: Stack(children: [
+              Button(text: 'ویرایش',margin: 100,textColor: Colors.white,color: orange,onPressed: () {
+                username = usernameController.text;
+                password = passwordController.text;
+                name = nameController.text;
+                update(context);
+                //Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  WaitingState()));
+                 },),
+              AlignEditText(margin : 420,hint : 'نام',controler: nameController,),
+              AlignEditText(margin : 340,hint :  'نام کاربری',controler: usernameController,),
+              AlignEditText(hint: 'رمز عبور', margin: 260,controler: passwordController,)
+            ])
+        )
+    );
+  }
+  void update(BuildContext context) async {
+
+    String url = 'https://bsite.net/irantech/ParlarProject/UpdateUser.aspx?username=$username&password=$password&name=$name&id=$id';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      log(response.body);
+      Message message =  Message.fromJson(jsonDecode(response.body));
+      if(message.exception.toString().isEmpty) {
+      }
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
+}
+
+class SpecialControlPage extends StatelessWidget {
+  final String ID;
+  final String name;
+  final String token;
+  final bool stared;
+  const SpecialControlPage({Key? key,required this.ID,required this.name,required this.token,required this.stared}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    const Color blue = Color.fromARGB(255,96, 172, 247);
+    const Color back = Color.fromARGB(255, 27, 40, 69);
+    const Color orange = Color.fromARGB(255, 255, 74, 28);
+    const Color button = Color.fromARGB(255,77, 87, 109);
+    return Scaffold(appBar: AppBar(backgroundColor: back,
+        title:
+          Row(children: [
+            IconButton(icon:const Icon(Icons.check), onPressed: () {Navigator.of(context).push(MaterialPageRoute(builder: (context) => MyHomePage(title: 'Irantech')));  },),
+            ],
+          ))
+        , resizeToAvoidBottomInset: false,
+        body: Container(
+          decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [back, Colors.black],
+                  transform: GradientRotation(1.57))
+          ),
+          child:Column(mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SpecialText('کلید مورد نظر برای تعریف عملگر را انتخاب کنید'),
+              const SizedBox(height: 20,),
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 85,
+                      child: ElevatedButton(onPressed: ()=>{function(context, 'power')},
+                        child: Icon(Icons.power_settings_new),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(orange),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(10))
+                                )
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 50,),
+                    SizedBox(width: 85,
+                      child: ElevatedButton(onPressed: ()=>{},
+                        child: const Icon(Icons.star_border),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(button),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    side: BorderSide(color: blue),
+                                    borderRadius: BorderRadius.all(Radius.circular(10))
+                                )
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 50,),
+                    SizedBox(width: 85,
+                      child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
+                        child: SpecialText('menu'),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(button),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    side: BorderSide(color: blue),
+                                    borderRadius: BorderRadius.all(Radius.circular(10))
+                                )
+                            )),
+                      ),
+                    )
+                  ]),
+              const SizedBox(height: 30,),
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+                      SizedBox(width: 55,height: 174,child:
+                      Container(child:
+                      Stack(children: [
+                        Align(alignment: Alignment.topCenter,child:
+                        SizedBox(width: 55,height: 87,child:
+                        ElevatedButton(onPressed: ()=>{function(context, 'ch')},
+                          child:const Center(child: Icon(Icons.keyboard_arrow_up,color: Colors.white,)),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(button),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                        bottomLeft: Radius.circular(0),
+                                        bottomRight: Radius.circular(0),
+                                      )
+                                  )
+                              )),
+                        ),
+                        ),
+                        ),
+                        Align(alignment: Alignment.bottomCenter,child:
+                        SizedBox(width: 55,height: 87,child:
+                        ElevatedButton(onPressed: ()=>{function(context, 'ch-')},
+                          child: const Center(child: Icon(Icons.keyboard_arrow_down,color: Colors.white,),),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(button),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(0),
+                                        topRight: Radius.circular(0),
+                                        bottomLeft: Radius.circular(20),
+                                        bottomRight: Radius.circular(20),
+                                      )
+                                  )
+                              )),
+                        ),
+                        )
+                        ),
+                        Center(child: SpecialText('CH',fountSize: 15,),)
+                      ],),
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.all(Radius.circular(20)),
+                          border: Border.all(color:blue),
+                          color: button,
+                        ),
+                      ),
+                      ),
+                      const SizedBox(height: 20,),
+                      SizedBox(height: 55,width: 55,child:
+                      ElevatedButton(onPressed: ()=>{function(context, 'mute')},
+                        child: const Icon(Icons.volume_off),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(button),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    side: BorderSide(color: blue),
+                                    borderRadius: BorderRadius.all(Radius.circular(20))
+                                )
+                            )),
+                      ),
+                      )
+                    ],),
+                    const SizedBox(width: 10,),
+                    Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+                      SizedBox(width: 240,height: 240,child:
+                      Container(
+                        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(150)),
+                          color: button,),
+                        child: Stack(children: [
+                          Center(child:
+                          SizedBox(width: 100,height: 100,child:
+                          ElevatedButton(onPressed: ()=>{},
+                              child: SpecialText('OK'),
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,50, 55, 65)),
+                                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(Radius.circular(150),
+                                          )
+                                      )
+                                  )
+                              )
+                          ),
+                          )
+                          ),
+                          ButtonOnControl(margin: const EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {function(context, 'up');  },),
+                          ButtonOnControl(margin: const EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {function(context, 'left');  },),
+                          ButtonOnControl(margin: const EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {function(context, 'right'); },),
+                          ButtonOnControl(margin: const EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {function(context, 'down');  },)
+                        ]
+                        ),
+                      ),
+                      ),
+                    ],),
+                    const SizedBox(width: 10,),
+
+                    Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+                      SizedBox(width: 55,height: 174,child:
+                      Container(child:
+                      Stack(children: [
+                        Align(alignment: Alignment.topCenter,child:
+                        SizedBox(width: 55,height: 87,child:
+                        ElevatedButton(onPressed: ()=>{function(context, 'vol')},
+                          child:const Center(child: Icon(Icons.volume_up,color: Colors.white,)),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(20),
+                                        topRight: Radius.circular(20),
+                                        bottomLeft: Radius.circular(0),
+                                        bottomRight: Radius.circular(0),
+                                      )
+                                  )
+                              )),
+                        ),
+                        ),
+                        ),
+                        Align(alignment: Alignment.bottomCenter,child:
+                        SizedBox(width: 55,height: 87,child:
+                        ElevatedButton(onPressed: ()=>{function(context, 'vol-')},
+                          child: const Center(child: Icon(Icons.volume_down,color: Colors.white,),),
+                          style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(0),
+                                        topRight: Radius.circular(0),
+                                        bottomLeft: Radius.circular(20),
+                                        bottomRight: Radius.circular(20),
+                                      )
+                                  )
+                              )),
+                        ),
+                        )
+                        ),
+                        Center(child: SpecialText('Vol',fountSize: 15,),)
+                      ],),
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          color: Color.fromARGB(255,77, 87, 109),
+                        ),
+                      ),
+                      ),
+                      const SizedBox(height: 20,),
+                      SizedBox(height: 55,width: 55,child:
+                      ElevatedButton(onPressed: ()=>{function(context, 'exit')},
+                        child: const Icon(Icons.exit_to_app),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    side: BorderSide(color: Color.fromARGB(255, 96, 172, 247)),
+                                    borderRadius: BorderRadius.all(Radius.circular(20))
+                                )
+                            )),
+                      ),
+                      )
+                    ],)
+                  ]),
+
+              const SizedBox(height: 30,),
+
+              Row(mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 85,
+                      child: ElevatedButton(onPressed: ()=>{function(context, 'power')},
+                        child: SpecialText('TV'),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(button),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(Radius.circular(10))
+                                )
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 50,),
+                    SizedBox(width: 85,
+                      child: ElevatedButton(onPressed: ()=>{},
+                        child: SpecialText('DVD'),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(button),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    side: BorderSide(color: blue),
+                                    borderRadius: BorderRadius.all(Radius.circular(10))
+                                )
+                            )),
+                      ),
+                    ),
+                    const SizedBox(width: 50,),
+                    SizedBox(width: 85,
+                      child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
+                        child: SpecialText('Source',fountSize: 15,),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(button),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                const RoundedRectangleBorder(
+                                    side: BorderSide(color: blue),
+                                    borderRadius: BorderRadius.all(Radius.circular(10))
+                                )
+                            )),
+                      ),
+                    )
+                  ]),
+              const SizedBox(height: 20,),
+
+              SizedBox(width: 350,height: 75,
+                child: ElevatedButton(onPressed: ()=>{
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  KeyPad(token: token,ID: ID,name: name,)))},
+                  child: SpecialText('کیپد'),
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(button),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          const RoundedRectangleBorder(
+                              side: BorderSide(color: blue),
+                              borderRadius: BorderRadius.all(Radius.circular(10))
+                          )
+                      )),
+                ),
+              )
+            ],),
+        )
+    );
+  }
+  void function(BuildContext context,String function) async {
+    return;
+    String s = token.trim();
+    String url = 'https://bsite.net/irantech/ParlarProject/Running.aspx?deviceid=$ID&functionname=$function&token=$s';
+    final response = await http.get(Uri.parse(url));
+    log(url.substring(0,60));
+    log(url.substring(60,url.length));
+    if (response.statusCode == 200) {
+      log(response.body);
+    } else {
+      throw Exception('Failed to load album');
+    }
+  }
+  void star(BuildContext context) async {
+    return;
+    int status = stared ? 0 : 1;
+    String url = 'https://bsite.net/irantech/ParlarProject/status.aspx?status=$status&id=$ID';
+    try {
+      final response = await http.get(Uri.parse(url));
+      int code = response.statusCode;
+      log(url);
+      if (response.statusCode == 200) {
+        log(response.body);
+        List<UserDevice> list = UserDevice.allFromJson(
+            jsonDecode(response.body));
+        //if (list.elementAt(0).exception.toString().isEmpty)
+          //Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomeState(list: list)));
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load album');
+      }
+    }catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString()),
+      ));
+    }
   }
 }
 
@@ -1198,21 +1632,21 @@ class DeviceType extends SizedBox{
         )),
       onPressed: () {
         Map<String,Map<String,Map<String,String>>> table = {
-          'power':{
-            'pow':{'ug-265':'id'},
-            'pow1':{'ug-265':'id'},
-            'pow2':{'ug-265':'id'},
-            'pow3':{'ug-265':'id'},
-            'pow4':{'ug-265':'id'},
-            'pow5':{'ug-265':'id'},
-            'pow6':{'ug-265':'id'},
-            'pow7':{'ug-265':'id'},
-            'pow8':{'ug-265':'id'},
-            'pow9':{'ug-265':'id'},
+          'تلویزیون':{
+            'سامسونگ':{'ug-265':'id','ug-266':'id','ug-267':'id','ug-268':'id','ug-269':'id','ug-270':'id','ug-271':'id','ug-272':'id','ug-273':'id'},
+            'سونی':{'ug-265':'id'},
+            'ایکس ویژن':{'ug-265':'id'},
+            'توشیبا':{'ug-265':'id'},
+            'شهاب':{'ug-265':'id'},
+            'ال جی':{'ug-265':'id'},
+            'پاناسونیک':{'ug-265':'id'},
+            'پارلار':{'ug-265':'id'},
+            'تک ویژن':{'ug-265':'id'},
+            'ارج':{'ug-265':'id'},
             'pow10':{'ug-265':'id'},
           }
         };
-      Navigator.of(con).push(MaterialPageRoute(builder: (context) => ListPage(K1: K,table: table,) ));},
+      Navigator.of(con).push(MaterialPageRoute(builder: (context) => text == 'دستگاه سفارشی'?SpecialControlPage(ID: '', token: '', name: '', stared: false,):ListPage(K1: K,table: table,) ));},
       child: Center(child:
         Column(mainAxisAlignment: MainAxisAlignment.center,children: [
           SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
@@ -1241,9 +1675,11 @@ class ListElement extends SizedBox{
         )),
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-            K3 == null ?
-            ListPage(K1: K1,K2:K2,table: table,):
-            HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));},
+            //K3 == null ?
+            ListPage(K1: K1,K2:K2,table: table,)
+                //:HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))
+        ));
+        },
       child: Align(alignment: Alignment.centerRight,child:
         SpecialText(K3 ?? K2,fountSize : 15)
       ,),
@@ -1304,6 +1740,25 @@ class NumericControlKey extends SizedBox{
       ),));
 }
 
+class TokenElement extends SizedBox{
+  TokenElement({Key? key,required BuildContext context,required String text})
+      : super(key: key,width: 350,height: 40,child:
+        ElevatedButton(style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(0.0),
+                )
+            )),
+          onPressed: () {},
+          child:
+            Align(alignment: Alignment.centerRight,child:
+              SpecialText(text,fountSize : 15)
+      ,),
+  )
+  );
+}
+
 
 class UserDevice {
   final String device_name;
@@ -1343,6 +1798,9 @@ class UserDevice {
     );
   }
 }
+class UD extends UserDevice{
+  UD() : super(exception: '',token: '',user_id: '',status: '',device_id: '',device_name: '',device_type: '',id: '');
+}
 
 class Message {
   final String id;
@@ -1364,3 +1822,43 @@ class Message {
   }
 }
 
+class User{
+  final String id;
+  final String name;
+  final String username;
+  final String password;
+  final String exception;
+  const User({required this.id,required this.name , required this.username,required this.password,required this.exception});
+
+  factory User.fromJson(Map<String, dynamic> json){
+    return User(
+      id: json['id'],
+      name: json['name'],
+      username: json['username'],
+      password: json['password'],
+      exception: json['exception']
+    );
+  }
+}
+
+class DeviceObj{
+  final String id;
+  final String name;
+  final String brand;
+  final String type;
+  final String exception;
+  const DeviceObj({required this.id,required this.name , required this.brand,required this.type,required this.exception});
+
+  factory DeviceObj.fromJson(Map<String, dynamic> json){
+    return DeviceObj(
+        id: json['id'],
+        name: json['name'],
+        brand: json['brand'],
+        type: json['type'],
+        exception: json['exception']
+    );
+  }
+  static List<DeviceObj> allFromJson(List<dynamic> json) {
+    return List<DeviceObj>.generate(json.length,(i)=>DeviceObj.fromJson(json.elementAt(i)));
+  }
+}
