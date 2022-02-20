@@ -11,8 +11,13 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  String currentToken = "";
+  String currentName = "";
+  String K1 = "";
+  String? K2 = "";
   List<UserDevice> list  = List.generate(0, (index) => UD());
-  User user = const User(id: '',exception: '',password: '',username: '',name: '');
+  User user = User(id: '',exception: '',password: '',username: '',name: '');
+  late Map<String,Map<String,Map<String,String>>> table;
   MyApp({Key? key}) : super(key: key);
   // This widget is the root of your application.
   @override
@@ -23,6 +28,10 @@ class MyApp extends StatelessWidget {
       'signup' : (BuildContext context) => SignUp(),
       'home' : (BuildContext context) => HomeState(list: list,myApp: this,),
       'edit' : (BuildContext context) => EditUser(user: user,),
+      'add' : (BuildContext context) =>  AddCentralDevice(myApp: this,),
+      'add_d': (BuildContext context) => AddDevice(table: table,myApp: this,),
+      'list' : (BuildContext context) => ListPage(table: table, K1: K1,K2: K2,myApp: this,),
+      'special' : (BuildContext context) => const SpecialControlPage(ID: '', name: '', token: '', stared: false)
     },
       title: 'Iran tech',
       theme: ThemeData(
@@ -147,6 +156,8 @@ class Login extends State<LoginState> {
   }
 
   void login() async {
+    myApp.user.username = username;
+    myApp.user.password = password;
     String url = 'https://bsite.net/irantech/ParlarProject/login.aspx?field=$username&password=$password';
     try {
       final response = await http.get(Uri.parse(url));
@@ -161,9 +172,8 @@ class Login extends State<LoginState> {
             .exception
             .toString()
             .isEmpty) {
-          Navigator.popUntil(context,ModalRoute.withName('login'),);
           myApp.list = list;
-          Navigator.pushNamed(context, 'home');
+          show(context, username);
         }
       } else {
         // If the server did not return a 200 OK response,
@@ -176,6 +186,25 @@ class Login extends State<LoginState> {
       ));
     }
   }
+  void show(BuildContext context,String username) async {
+    String url = 'https://bsite.net/irantech/ParlarProject/ShowUser.aspx?username=$username';
+    log(url);
+    final response = await http
+        .get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      log(response.body);
+      User user =  User.fromJson(jsonDecode(response.body));
+      if(user.exception.toString().isEmpty) {
+        myApp.user = user;
+        Navigator.popUntil(context,ModalRoute.withName('login'),);
+        Navigator.pushNamed(context, 'home');
+      }
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
 }
 
 class SignUp extends StatelessWidget {
@@ -183,7 +212,7 @@ class SignUp extends StatelessWidget {
   String username = "";
   String password = "";
   String name = "";
-  TextEditingController usernameController = new TextEditingController();
+  TextEditingController usernameController =  TextEditingController();
   TextEditingController passwordController = new TextEditingController();
   TextEditingController nameController = new TextEditingController();
   @override
@@ -262,18 +291,20 @@ class Home extends State<HomeState> {
                 //ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("این عمل برای شما امکان پذیر نمی باشد.\n لطفا از وبسایت استفاده کرده و یا جدید ترین نسخه اپلیکیشن را از لینک زیر دانلود کنید \n https://iran-tech.github.io/app.apk \nلینک وبسایت :\n  iran-tech.github.io")));
                 //Navigator.of(context).push(MaterialPageRoute(builder: (context) => EditUser()));
                 Navigator.pushNamed(context, 'waiting');
-                show(context, 'khanchi');
+                show(context, myApp.user.username);
                 },),
               IconButton(icon:const Icon(Icons.add), onPressed : (){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("این عمل برای شما امکان پذیر نمی باشد.\n لطفا از وبسایت استفاده کرده و یا جدید ترین نسخه اپلیکیشن را از لینک زیر دانلود کنید \n https://iran-tech.github.io/app.apk \nلینک وبسایت :\n  iran-tech.github.io")));
+                //ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("این عمل برای شما امکان پذیر نمی باشد.\n لطفا از وبسایت استفاده کرده و یا جدید ترین نسخه اپلیکیشن را از لینک زیر دانلود کنید \n https://iran-tech.github.io/app.apk \nلینک وبسایت :\n  iran-tech.github.io")));
                 //Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddCentralDevice()));
+                //devices();
+                Navigator.pushNamed(context, 'add');
               })],
             )
         ),
         resizeToAvoidBottomInset: false,
         body: MaterialApp(
                 home: DefaultTabController(
-                  length: 3,
+                  length: count(),
                   child: Scaffold(backgroundColor: const Color.fromARGB(0, 0, 0, 0) ,
                     bottomNavigationBar: rooms(),
                     body: TabBarView(
@@ -283,6 +314,15 @@ class Home extends State<HomeState> {
                 ),
               )
     );
+  }
+  int count(){
+    List<String> l = List.generate(0, (index) => '');
+    for(int i = 0 ; i < list.length; i++)
+      {
+        if(!l.contains(list.elementAt(i).device_name))
+          l.add(list.elementAt(i).device_name);
+      }
+    return l.length+2;
   }
   Widget rooms() {
     const Color orange = Color.fromARGB(255, 255, 74, 28);
@@ -311,7 +351,7 @@ class Home extends State<HomeState> {
       }
     }
 
-    for(int i = 0; i < list.length; i++) {
+    for(int i = 0; i < rooms.length; i++) {
       result.add(Tab(text: rooms.elementAt(i),),);
     }
     return result;
@@ -461,15 +501,21 @@ class Home extends State<HomeState> {
       throw Exception('Failed to load album');
     }
   }
+
+
 }
 
 class AddCentralDevice extends StatelessWidget {
-  const AddCentralDevice({Key? key}) : super(key: key);
+  MyApp myApp;
+  TextEditingController tokenController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  AddCentralDevice({Key? key,required this.myApp}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color orange = Color.fromARGB(255, 255, 74, 28);
+
     return Scaffold(appBar: AppBar(backgroundColor: back,
         title: const Align(
           alignment: Alignment.centerRight, child: Text('اضافه کنید'),))
@@ -485,34 +531,92 @@ class AddCentralDevice extends StatelessWidget {
               Row(mainAxisAlignment: MainAxisAlignment.center,children: [
                 Column(mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    EditText(hint: 'مکان مورد استفاده',),
+                    EditText(hint: 'مکان مورد استفاده',controler: nameController,),
                     const SizedBox(height: 30,),
-                    EditText(hint: 'توکن دستگاه',),
+                    EditText(hint: 'توکن دستگاه',controler: tokenController,),
                     const SizedBox(height: 5,),
-                    TokenElement(context: context, text: 'gjhrDt_256_WWghs...(room1)'),
-                    const SizedBox(height: 2,),
-                    TokenElement(context: context, text: 't_2hrD56ghs_WgjW...(room2)'),
-                    const SizedBox(height: 2,),
-                    TokenElement(context: context, text: 'WDt_2Wghsgjhr020...(room3)')
+                    //TokenElement(context: context, text: 'gjhrDt_256_WWghs...(room1)'),
+                    //const SizedBox(height: 2,),
+                    //TokenElement(context: context, text: 't_2hrD56ghs_WgjW...(room2)'),
+                    //const SizedBox(height: 2,),
+                    //TokenElement(context: context, text: 'WDt_2Wghsgjhr020...(room3)')
                     ],)
                 ],
               ),
               Button(text: 'بعدی',margin: 50,
-                color:orange ,textColor: Colors.white,onPressed: ()=>{Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddDevice()))},)
+                color:orange ,textColor: Colors.white,onPressed: ()=>{
+                myApp.currentToken = tokenController.text,
+                myApp.currentName = nameController.text,
+                  Navigator.pushNamed(context, 'waiting'),
+                  devices(context),
+                //Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddDevice()))
+                },)
             ])
         )
     );
   }
+  void devices(BuildContext context) async {
+    String url = 'https://bsite.net/irantech/ParlarProject/Devices.aspx';
+    try {
+      log(url);
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        log(response.body);
+        List<DeviceObj> list = DeviceObj.allFromJson(jsonDecode(response.body));
+        if (list
+            .elementAt(0)
+            .exception
+            .toString()
+            .isEmpty) {
+          //Navigator.popUntil(context,ModalRoute.withName('login'),);
+          //myApp.list = list;
+          //Navigator.pushNamed(context, 'home');
+          //int i = table(list).length;
+          //log('$i');
+          myApp.table = table(list);
+          Navigator.popUntil(context,ModalRoute.withName('add'),);
+          Navigator.pushNamed(context, 'add_d');
+          //Navigator.pushNamed(context, 'edit');
+        }
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load album');
+      }
+    }catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString()),
+      ));
+    }
+  }
+  Map<String,Map<String,Map<String,String>>> table(List<DeviceObj> list){
+    Map<String,Map<String,Map<String,String>>> result = {};
+    for(int i = 0; i < list.length ; i++)
+    {
+      if(result[list[i].type] == null) {
+        result[list[i].type] = {};
+      }
+      if(result[list[i].type]![list[i].brand] == null) {
+        result[list[i].type]![list[i].brand] = {};
+      }
+      result[list[i].type]![list[i].brand]![list[i].name] = list[i].id;
+    }
+    return result;
+  }
 }
 
 class AddDevice extends StatelessWidget {
-  const AddDevice({Key? key}) : super(key: key);
+  MyApp myApp;
+  Map<String,Map<String,Map<String,String>>> table;
+  AddDevice({Key? key,required this.table,required this.myApp}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     const Color blue = Color.fromARGB(255,96, 172, 247);
     const Color back = Color.fromARGB(255, 27, 40, 69);
     const Color orange = Color.fromARGB(255, 255, 74, 28);
+    myApp.table = table;
+    log(table.length.toString());
     return Scaffold(appBar: AppBar(backgroundColor: back,
         title: const Align(
           alignment: Alignment.centerRight, child: Text('اضافه کنید'),))
@@ -530,31 +634,31 @@ class AddDevice extends StatelessWidget {
                   Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                     Column(children: [
-                      DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز',K: 'تلویزیون',con: context,),
+                      DeviceType(iconDir: 'Icon_sockets.png', text: 'پریز برق و فیوز',K: 'TV',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_refrigerator.png', text: 'یخچال',K: 'refrigerator',con: context,),
+                      DeviceType(iconDir: 'Icon_refrigerator.png', text: 'یخچال',K: 'AS',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_washing machine.png', text: 'لباس شویی',K: 'washing machine',con: context),
+                      DeviceType(iconDir: 'Icon_washing machine.png', text: 'لباس شویی',K: 'DVD',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_router.png', text: 'شبکه و وسایل هوشمند',K: 'router',con: context,),
+                      DeviceType(iconDir: 'Icon_router.png', text: 'شبکه و وسایل هوشمند',K: 'Monitor',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی',K: 'electricity',con: context,),
+                      DeviceType(iconDir: 'Icon_electricity.png', text: 'روشنایی',K: 'VP',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_television.png', text: 'صوتی تصویری',K: 'television',con: context,),
+                      DeviceType(iconDir: 'Icon_television.png', text: 'صوتی تصویری',K: 'light',con: context,table: table,myApp: myApp,),
                     ],),
                       const SizedBox(width: 20,),
                     Column(children: [
-                      DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز',K: 'coffee maker',con: context,),
+                      DeviceType(iconDir: 'Icon_coffee maker.png', text: 'قهوه ساز',K: 'reciever',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_dishwater.png', text: 'ظرف شویی',K: 'dishwater',con: context,),
+                      DeviceType(iconDir: 'Icon_dishwater.png', text: 'ظرف شویی',K: 'safety',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_water.png', text: 'شیر آلات',K: 'water',con: context,),
+                      DeviceType(iconDir: 'Icon_water.png', text: 'شیر آلات',K: 'water',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_stove.png', text: 'فر و گرمایش',K: 'stove',con: context,),
+                      DeviceType(iconDir: 'Icon_stove.png', text: 'فر و گرمایش',K: 'stove',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_mirror closet.png', text: 'سایر',K: 'other',con: context,),
+                      DeviceType(iconDir: 'Icon_mirror closet.png', text: 'سایر',K: '?',con: context,table: table,myApp: myApp,),
                       const SizedBox(height: 20,),
-                      DeviceType(iconDir: 'Icon_closet.png', text: 'دستگاه سفارشی',K: 'special',con: context,),
+                      DeviceType(iconDir: 'Icon_closet.png', text: 'دستگاه سفارشی',K: 'special',con: context,table: table,myApp: myApp,),
                     ],)
                   ],),
                 const SizedBox(height: 20,),
@@ -563,16 +667,19 @@ class AddDevice extends StatelessWidget {
         )
     );
   }
+
 }
 
 class ListPage extends StatelessWidget {
   final String K1;
+  MyApp myApp;
   final String? K2;
   Map<String,Map<String,Map<String,String>>> table;
   Iterable<String>? data;
-  ListPage({Key? key,required this.table,required String this.K1,this.K2}) : super(key: key);
+  ListPage({Key? key,required this.table,required String this.K1,this.K2,required this.myApp,}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    log(myApp.user.username);
     dataManaging();
     const Color blue = Color.fromARGB(255,96, 172, 247);
     const Color back = Color.fromARGB(255, 27, 40, 69);
@@ -589,9 +696,10 @@ class ListPage extends StatelessWidget {
             child:SingleChildScrollView(child:
               Column(children: [
                 Align(alignment: Alignment.topRight,child: SpecialText('لطفا دستگاه مورد نظر خود را از بین دسته بندی ها انتخاب کنید'),),
-                EditText(hint: 'جست و جو بین محصولات',),
+                //EditText(hint: 'جست و جو بین محصولات',),
                 const SizedBox(height: 20,),
-                  Column(children: list(context)??[]),
+                  Column(children: list(context,myApp.currentName,myApp.currentToken)??[]),
+                const SizedBox(height: 700,),
               ],)
             )
         )
@@ -604,18 +712,100 @@ class ListPage extends StatelessWidget {
       data = table[K1]![K2]?.keys ;
     }
   }
-  List<Widget>? list(BuildContext context) {
+  List<Widget>? list(BuildContext context,String name,String token) {
     int j =  data?.length ?? 0;
     List<Widget>? result = [];
     for(int i = 0; i < j;i++){
       ListElement lm;
       lm = (K2 == null) ?
-        ListElement(context: context,table: table,K1: K1,K2:data?.elementAt(i)??"") :
-        ListElement(context: context,table: table,K1: K1,K2:K2??"",K3:data?.elementAt(i)??"");
+        ListElement(context: context,table: table,K1: K1,K2:data?.elementAt(i)??"",myApp: myApp,
+            onPressed: () {
+              if(K2 == null){
+                myApp.K1 = K1;
+                myApp.K2 = data?.elementAt(i)??"";
+                myApp.table = table;
+                Navigator.pushNamed(context,'list');
+              }else{
+                add(context,name,table[K1]![K2]![data?.elementAt(i)]!,K1,myApp.user.id,token,0);
+                Navigator.pushNamed(context, 'waiting');
+              }
+
+              //Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+              //K3 == null ?
+              //ListPage(K1: K1,K2:K2,table: table,myApp: myApp,)
+                //:HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));
+            }) :
+        ListElement(context: context,table: table,K1: K1,K2:K2??"",K3:data?.elementAt(i)??"",myApp: myApp,
+            onPressed: () {
+              if(data?.elementAt(i)==null){
+                myApp.K1 = K1;
+                myApp.K2 = K2;
+                myApp.table = table;
+                Navigator.pushNamed(context,'list');
+              }else{
+                add(context,name,table[K1]![K2]![data?.elementAt(i)]!,K1,myApp.user.id,token,0);
+                Navigator.pushNamed(context, 'waiting');
+              }
+
+              //Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+              //K3 == null ?
+              //ListPage(K1: K1,K2:K2,table: table,myApp: myApp,)
+                //:HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))));
+            });
       result.add(lm);
       result.add(const SizedBox(height: 15,),);
     }
     return result;
+  }
+  void add(BuildContext context,String device_name,String device_id,String device_type,String user_id,String token,int status) async {
+    String url =
+        'https://bsite.net/irantech/ParlarProject/add_user_device.aspx?device_name=$device_name&device_id=$device_id&device_type=$device_type&user_id=$user_id&token=$token&status=$status';
+    log(url);
+    final response = await http
+        .get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      log(response.body);
+      Message message =  Message.fromJson(jsonDecode(response.body));
+      if(message.exception.toString().isEmpty) {
+        login(context);
+      }
+    } else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load album');
+    }
+  }
+  void login(BuildContext context) async {
+    String username = myApp.user.username;
+    String password = myApp.user.password;
+    String url = 'https://bsite.net/irantech/ParlarProject/login.aspx?field=$username&password=$password';
+    try {
+      final response = await http.get(Uri.parse(url));
+      int code = response.statusCode;
+      log(url);
+      if (response.statusCode == 200) {
+        log(response.body);
+        List<UserDevice> list = UserDevice.allFromJson(
+            jsonDecode(response.body));
+        if (list
+            .elementAt(0)
+            .exception
+            .toString()
+            .isEmpty) {
+          myApp.list = list;
+          Navigator.popUntil(context,ModalRoute.withName('login'),);
+          Navigator.pushNamed(context, 'home');
+        }
+      } else {
+        // If the server did not return a 200 OK response,
+        // then throw an exception.
+        throw Exception('Failed to load album');
+      }
+    }catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(e.toString()),
+      ));
+    }
   }
 }
 
@@ -1082,7 +1272,12 @@ class Waiting extends State<WaitingState> with SingleTickerProviderStateMixin {
             ],)
         )
     );
+  }@override
+  void dispose() {
+    log('disposed');
+    super.dispose();
   }
+
 }
 
 class Forget extends StatelessWidget {
@@ -1185,7 +1380,7 @@ class SpecialControlPage extends StatelessWidget {
     return Scaffold(appBar: AppBar(backgroundColor: back,
         title:
           Row(children: [
-            IconButton(icon:const Icon(Icons.check), onPressed: () {Navigator.of(context).push(MaterialPageRoute(builder: (context) => MyHomePage(title: 'Irantech')));  },),
+            IconButton(icon:const Icon(Icons.check), onPressed: () {Navigator.pushNamed(context, 'waiting'); },),
             ],
           ))
         , resizeToAvoidBottomInset: false,
@@ -1201,7 +1396,7 @@ class SpecialControlPage extends StatelessWidget {
               Row(mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(width: 85,
-                      child: ElevatedButton(onPressed: ()=>{function(context, 'power')},
+                      child: ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: Icon(Icons.power_settings_new),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(orange),
@@ -1214,7 +1409,7 @@ class SpecialControlPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 50,),
                     SizedBox(width: 85,
-                      child: ElevatedButton(onPressed: ()=>{},
+                      child: ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: const Icon(Icons.star_border),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(button),
@@ -1228,7 +1423,7 @@ class SpecialControlPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 50,),
                     SizedBox(width: 85,
-                      child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
+                      child: ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: SpecialText('menu'),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(button),
@@ -1250,7 +1445,7 @@ class SpecialControlPage extends StatelessWidget {
                       Stack(children: [
                         Align(alignment: Alignment.topCenter,child:
                         SizedBox(width: 55,height: 87,child:
-                        ElevatedButton(onPressed: ()=>{function(context, 'ch')},
+                        ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                           child:const Center(child: Icon(Icons.keyboard_arrow_up,color: Colors.white,)),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(button),
@@ -1269,7 +1464,7 @@ class SpecialControlPage extends StatelessWidget {
                         ),
                         Align(alignment: Alignment.bottomCenter,child:
                         SizedBox(width: 55,height: 87,child:
-                        ElevatedButton(onPressed: ()=>{function(context, 'ch-')},
+                        ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                           child: const Center(child: Icon(Icons.keyboard_arrow_down,color: Colors.white,),),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(button),
@@ -1297,7 +1492,7 @@ class SpecialControlPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 20,),
                       SizedBox(height: 55,width: 55,child:
-                      ElevatedButton(onPressed: ()=>{function(context, 'mute')},
+                      ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: const Icon(Icons.volume_off),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(button),
@@ -1319,7 +1514,7 @@ class SpecialControlPage extends StatelessWidget {
                         child: Stack(children: [
                           Center(child:
                           SizedBox(width: 100,height: 100,child:
-                          ElevatedButton(onPressed: ()=>{},
+                          ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                               child: SpecialText('OK'),
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,50, 55, 65)),
@@ -1333,10 +1528,10 @@ class SpecialControlPage extends StatelessWidget {
                           ),
                           )
                           ),
-                          ButtonOnControl(margin: const EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {function(context, 'up');  },),
-                          ButtonOnControl(margin: const EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {function(context, 'left');  },),
-                          ButtonOnControl(margin: const EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {function(context, 'right'); },),
-                          ButtonOnControl(margin: const EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {function(context, 'down');  },)
+                          ButtonOnControl(margin: const EdgeInsets.only(top:10), icon: Icons.arrow_drop_up, alignment: Alignment.topCenter, onPressed: () {Navigator.pushNamed(context, 'waiting');  },),
+                          ButtonOnControl(margin: const EdgeInsets.only(left:10), icon: Icons.arrow_left, alignment: Alignment.centerLeft, onPressed: () {Navigator.pushNamed(context, 'waiting');  },),
+                          ButtonOnControl(margin: const EdgeInsets.only(right:10), icon: Icons.arrow_right, alignment: Alignment.centerRight, onPressed: () {Navigator.pushNamed(context, 'waiting'); },),
+                          ButtonOnControl(margin: const EdgeInsets.only(bottom:10), icon: Icons.arrow_drop_down, alignment: Alignment.bottomCenter, onPressed: () {Navigator.pushNamed(context, 'waiting');  },)
                         ]
                         ),
                       ),
@@ -1350,7 +1545,7 @@ class SpecialControlPage extends StatelessWidget {
                       Stack(children: [
                         Align(alignment: Alignment.topCenter,child:
                         SizedBox(width: 55,height: 87,child:
-                        ElevatedButton(onPressed: ()=>{function(context, 'vol')},
+                        ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                           child:const Center(child: Icon(Icons.volume_up,color: Colors.white,)),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -1369,7 +1564,7 @@ class SpecialControlPage extends StatelessWidget {
                         ),
                         Align(alignment: Alignment.bottomCenter,child:
                         SizedBox(width: 55,height: 87,child:
-                        ElevatedButton(onPressed: ()=>{function(context, 'vol-')},
+                        ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                           child: const Center(child: Icon(Icons.volume_down,color: Colors.white,),),
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -1396,7 +1591,7 @@ class SpecialControlPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 20,),
                       SizedBox(height: 55,width: 55,child:
-                      ElevatedButton(onPressed: ()=>{function(context, 'exit')},
+                      ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: const Icon(Icons.exit_to_app),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -1416,7 +1611,7 @@ class SpecialControlPage extends StatelessWidget {
               Row(mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(width: 85,
-                      child: ElevatedButton(onPressed: ()=>{function(context, 'power')},
+                      child: ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: SpecialText('TV'),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(button),
@@ -1429,7 +1624,7 @@ class SpecialControlPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 50,),
                     SizedBox(width: 85,
-                      child: ElevatedButton(onPressed: ()=>{},
+                      child: ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: SpecialText('DVD'),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(button),
@@ -1443,7 +1638,7 @@ class SpecialControlPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 50,),
                     SizedBox(width: 85,
-                      child: ElevatedButton(onPressed: ()=>{function(context, 'menu')},
+                      child: ElevatedButton(onPressed: ()=>{Navigator.pushNamed(context, 'waiting')},
                         child: SpecialText('Source',fountSize: 15,),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(button),
@@ -1458,7 +1653,7 @@ class SpecialControlPage extends StatelessWidget {
                   ]),
               const SizedBox(height: 20,),
 
-              SizedBox(width: 350,height: 75,
+              /*SizedBox(width: 350,height: 75,
                 child: ElevatedButton(onPressed: ()=>{
                   Navigator.of(context).push(MaterialPageRoute(builder: (context) =>  KeyPad(token: token,ID: ID,name: name,)))},
                   child: SpecialText('کیپد'),
@@ -1471,12 +1666,13 @@ class SpecialControlPage extends StatelessWidget {
                           )
                       )),
                 ),
-              )
+              )*/
             ],),
         )
     );
   }
   void function(BuildContext context,String function) async {
+
     return;
     String s = token.trim();
     String url = 'https://bsite.net/irantech/ParlarProject/Running.aspx?deviceid=$ID&functionname=$function&token=$s';
@@ -1620,8 +1816,9 @@ class SpecialText extends Text{
 
 class DeviceType extends SizedBox{
   final String K ;
-
-  DeviceType({Key? key,required BuildContext con,required String text,required String iconDir, required this.K}) :
+  MyApp myApp;
+  DeviceType({Key? key,required BuildContext con,required String text,required String iconDir
+    , required this.K, required Map<String,Map<String,Map<String,String>>> table,required this.myApp}) :
         super(key: key,width: 170,height: 110,child:
     ElevatedButton(style: ButtonStyle(
         backgroundColor: MaterialStateProperty.all(Color.fromARGB(255,77, 87, 109)),
@@ -1631,22 +1828,29 @@ class DeviceType extends SizedBox{
             )
         )),
       onPressed: () {
-        Map<String,Map<String,Map<String,String>>> table = {
-          'تلویزیون':{
-            'سامسونگ':{'ug-265':'id','ug-266':'id','ug-267':'id','ug-268':'id','ug-269':'id','ug-270':'id','ug-271':'id','ug-272':'id','ug-273':'id'},
-            'سونی':{'ug-265':'id'},
-            'ایکس ویژن':{'ug-265':'id'},
-            'توشیبا':{'ug-265':'id'},
-            'شهاب':{'ug-265':'id'},
-            'ال جی':{'ug-265':'id'},
-            'پاناسونیک':{'ug-265':'id'},
-            'پارلار':{'ug-265':'id'},
-            'تک ویژن':{'ug-265':'id'},
-            'ارج':{'ug-265':'id'},
-            'pow10':{'ug-265':'id'},
-          }
-        };
-      Navigator.of(con).push(MaterialPageRoute(builder: (context) => text == 'دستگاه سفارشی'?SpecialControlPage(ID: '', token: '', name: '', stared: false,):ListPage(K1: K,table: table,) ));},
+        // Map<String,Map<String,Map<String,String>>> table = {
+        //   'تلویزیون':{
+        //     'سامسونگ':{'ug-265':'id','ug-266':'id','ug-267':'id','ug-268':'id','ug-269':'id','ug-270':'id','ug-271':'id','ug-272':'id','ug-273':'id'},
+        //     'سونی':{'ug-265':'id'},
+        //     'ایکس ویژن':{'ug-265':'id'},
+        //     'توشیبا':{'ug-265':'id'},
+        //     'شهاب':{'ug-265':'id'},
+        //     'ال جی':{'ug-265':'id'},
+        //     'پاناسونیک':{'ug-265':'id'},
+        //     'پارلار':{'ug-265':'id'},
+        //     'تک ویژن':{'ug-265':'id'},
+        //     'ارج':{'ug-265':'id'},
+        //     'pow10':{'ug-265':'id'},
+        //   }
+        // };
+      //Navigator.of(con).push(MaterialPageRoute(builder: (context) => text == 'دستگاه سفارشی'?SpecialControlPage(ID: '', token: '', name: '', stared: false,):ListPage(K1: K,table: table,) ));
+      //Navigator.pushNamed(context, 'list
+        myApp.K1 = K;
+        myApp.K2 = null;
+        myApp.table = table;
+        Navigator.pushNamed(con, text == 'دستگاه سفارشی'?'special':'list');
+      },
+
       child: Center(child:
         Column(mainAxisAlignment: MainAxisAlignment.center,children: [
           SizedBox(width: 50 ,child: Image.asset('assets/$iconDir')),
@@ -1662,9 +1866,10 @@ class ListElement extends SizedBox{
   String K1;
   String K2;
   String? K3;
+  MyApp myApp;
   Map<String,Map<String,Map<String,String>>> table;
   ListElement({Key? key,required BuildContext context,required this.table
-    ,required this.K1,required this.K2,this.K3})
+    ,required this.K1,required this.K2,this.K3,required this.myApp,required VoidCallback onPressed})
       : super(key: key,width: 350,height: 60,child:
     ElevatedButton(style: ButtonStyle(
         backgroundColor: MaterialStateProperty.all(const Color.fromARGB(255,77, 87, 109)),
@@ -1673,18 +1878,32 @@ class ListElement extends SizedBox{
               borderRadius: BorderRadius.circular(10.0),
             )
         )),
-      onPressed: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-            //K3 == null ?
-            ListPage(K1: K1,K2:K2,table: table,)
-                //:HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))
-        ));
-        },
+      onPressed: onPressed
+        //   () {
+        // if(K3==null){
+        //   myApp.K1 = K1;
+        //   myApp.K2 = K2;
+        //   myApp.table = table;
+        //   Navigator.pushNamed(context,'list');
+        // }else{
+        //   String name = '';
+        //   String token = '';
+        //   add(context,name,table[K1]![K2]![K3]!,K1,myApp.user.id,token,0);
+        // }
+        //
+        // Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+        //     //K3 == null ?
+        //     ListPage(K1: K1,K2:K2,table: table,myApp: myApp,)
+        //         //:HomeState(list:List<UserDevice>.generate(1, (index) => UserDevice(device_name: 'device_name', id: 'id', device_type: 'device_type', device_id: 'device_id', exception: 'exception', status: 'status', token: 'token', user_id: 'user_id')))
+        // ));
+        // }
+        ,
       child: Align(alignment: Alignment.centerRight,child:
         SpecialText(K3 ?? K2,fountSize : 15)
       ,),
     )
   );
+
 }
 
 class Device extends SizedBox{
@@ -1825,10 +2044,10 @@ class Message {
 class User{
   final String id;
   final String name;
-  final String username;
-  final String password;
+   String username;
+   String password;
   final String exception;
-  const User({required this.id,required this.name , required this.username,required this.password,required this.exception});
+  User({required this.id,required this.name , required this.username,required this.password,required this.exception});
 
   factory User.fromJson(Map<String, dynamic> json){
     return User(
